@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>2D CAD</title>
+    <style>
+        #canvas {
+            border: 1px solid black;
+        }
+    </style>
+    <script type="module" src="run_javascript.js"></script>
+</head>
+
+<body>
+    <canvas id="cadCanvas" width="800" height="600" style="border:1px solid #000;"></canvas>
+
+    <br>
+    <button id="clear">Clear</button>
+    <button id="update-rendering">Update Rendering</button>
+
+    <br>
+    <div id="debug-info"></div>
+
+    <br>
+
+    <button id="save">Save</button>
+    <input type="file" id="load" accept=".json">
+
+    <br>
+    <button id="draw-line-btn">Line Mode</button>
+    <button id="draw-circle-btn">Circle Mode</button>
+</body>
+
+</html>
