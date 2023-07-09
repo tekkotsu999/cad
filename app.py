@@ -3,8 +3,6 @@ from optimize import run_optimization
 
 app = Flask(__name__)
 
-print("here")
-
 @app.route('/')
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
