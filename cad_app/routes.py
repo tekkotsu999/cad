@@ -2,7 +2,7 @@ from flask import render_template
 from . import app  # __init__.pyからFlaskアプリケーションインスタンスをインポート
 
 from flask import jsonify, request
-from .optimize import run_optimization
+from .src.optimize import run_optimization
 
 @app.route('/')
 def home():
