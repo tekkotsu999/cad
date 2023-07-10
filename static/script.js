@@ -8,8 +8,6 @@ let data = {
     displacement: [0, 0]
 };
 
-// console.log("here")
-
 canvas.addEventListener('mousemove', (event) => {
     // マウスカーソルの位置を取得
     let mouseX = event.clientX - canvas.offsetLeft;

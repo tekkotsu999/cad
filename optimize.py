@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
 
-###########################################
-
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -16,8 +14,6 @@ class Line:
     @property
     def length(self):
         return np.sqrt((self.p1.x - self.p2.x) ** 2 + (self.p1.y - self.p2.y) ** 2)
-
-###########################################
 
 def run_optimization(data):
 
