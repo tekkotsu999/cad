@@ -1,11 +1,13 @@
-from flask import Flask, jsonify, request, send_from_directory
-from optimize import run_optimization
+from flask import render_template
+from . import app  # __init__.pyからFlaskアプリケーションインスタンスをインポート
 
-app = Flask(__name__)
+from flask import jsonify, request
+from .optimize import run_optimization
 
 @app.route('/')
-def serve():
-    return send_from_directory(app.static_folder, 'index.html')
+def home():
+    return render_template('index.html')
+
 
 @app.route('/optimize', methods=['POST'])
 def optimize():
@@ -17,5 +19,3 @@ def optimize():
     # 結果をJSON形式で返す
     return jsonify(result)
 
-if __name__ == '__main__':
-    app.run(debug=True)

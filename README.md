@@ -3,7 +3,7 @@
 ## 起動のさせ方
 
 ```
-$ python app.py
+$ python run.py
 ```
 
 ブラウザで、
