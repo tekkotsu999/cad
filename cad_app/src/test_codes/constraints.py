@@ -1,10 +1,11 @@
 from points import Point
+from lines import Line
 import numpy as np
 
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する
 # ポイントのインデックスを引数として取り、そのポイントの位置を最適化変数から取得する
 class FixedPointConstraint:
-    def __init__(self, point_idx):
+    def __init__(self, point_idx, points):
         self.point_idx = point_idx
         self.initial_point = points[point_idx]
 

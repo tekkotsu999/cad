@@ -19,8 +19,8 @@ lines = [ab,bc,cd]
 
 # 固定ポイントと固定長さの制約を定義します。ポイントのインデックスとラインの初期長さを使用します。
 constraints = [
-    FixedPointConstraint(0),
-    FixedPointConstraint(3),
+    FixedPointConstraint(0, points),
+    FixedPointConstraint(3, points),
     FixedLengthConstraint(0, 1, ab.length),
     FixedLengthConstraint(1, 2, bc.length),
     FixedLengthConstraint(2, 3, cd.length)]
@@ -29,7 +29,7 @@ constraints = [
 target_position = Point(600, 300)
 
 # 点cを目標点に移動させます。
-new_points = move_point(c, target_position, constraints)
+new_points = move_point(c, target_position, constraints, points)
 
 # 新しい座標を表示します。
 for point in new_points:

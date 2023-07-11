@@ -18,7 +18,7 @@ def target_point_distance(target_point_index, target_position):
 
 
 # 目標点への移動を試みる関数
-def move_point(target_point, target_position, constraints):
+def move_point(target_point, target_position, constraints, points):
     initial_points_flat = []
     for point in points:
         initial_points_flat.extend([point.x, point.y])
