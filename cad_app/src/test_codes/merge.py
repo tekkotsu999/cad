@@ -16,7 +16,7 @@ for file in files:
         content = f.read()
     
     # マークダウンのコードブロックに変換
-    merged_content += f'## File: {file} \n```{lang}\n{content}\n```\n\n'
+    merged_content += f'## {file} \n```{lang}\n{content}\n```\n\n'
 
 # 現在のタイムスタンプを取得
 timestamp = datetime.now().strftime('%Y%m%d%H%M%S')

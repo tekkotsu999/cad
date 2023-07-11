@@ -1,7 +1,7 @@
 from points import Point
 from lines import Line
 from constraints import FixedPointConstraint, FixedLengthConstraint
-from optimiz import move_point
+from optimize import move_point
 
 
 # 初期座標と目標座標を設定します。
