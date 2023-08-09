@@ -8,5 +8,5 @@ $ python run.py
 
 ブラウザで、
 ```
-http://localhost:5000/static/test.html
+http://127.0.0.1:5000/
 ```
