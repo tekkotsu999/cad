@@ -45,7 +45,7 @@ def move_point(target_point, target_position, constraints, points):
         constraint_dict = {'type': 'eq', 'fun': c}
         constraints_for_optimization.append(constraint_dict)
 
-    res = minimize(target_distance, initial_points_flat, constraints=constraints_for_optimization, method='SLSQP')
+    res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
     print(res)
 
     updated_points_flat = res.x
@@ -56,22 +56,24 @@ def move_point(target_point, target_position, constraints, points):
     return updated_points
 
 
-def apply_constraints_and_move(target_point, target_position, initial_constraints, additional_constraints, points):
+def apply_constraints_and_move(initial_constraints, additional_constraints, points):
     # Flatten the points for optimization
     initial_points_flat = []
     for point in points:
         initial_points_flat.extend([point.x, point.y])
     initial_points_flat = np.array(initial_points_flat)
     
-    # Convert constraints to format suitable for scipy's minimize function
-    constraints_for_optimization = [{'type': 'eq', 'fun': c} for c in initial_constraints + additional_constraints]
-    
-    # Define the objective function to minimize (distance from target position)
-    target_point_index = points.index(target_point)
-    target_distance = target_point_distance(target_point_index, target_position)
+    # Convert constraints to format suitable for scipy's minimize function    
+    constraints_for_optimization = []
+    for c in initial_constraints + additional_constraints:
+        constraint_dict = {'type': 'eq', 'fun': c}
+        constraints_for_optimization.append(constraint_dict)
+
+    def target_distance(points_flat):
+        return 0
     
     # Use 'SLSQP' method as it supports equality constraints
-    res = minimize(target_distance, initial_points_flat, constraints=constraints_for_optimization, method='SLSQP')
+    res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
     
     # Extract the updated points from the result
     updated_points_flat = res.x

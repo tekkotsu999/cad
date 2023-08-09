@@ -20,7 +20,7 @@ initial_constraints = [
 additional_constraints = [VerticalConstraint(0, 1)]
 
 # Apply the constraints and get the updated positions
-updated_points = apply_constraints_and_move(b, None, initial_constraints, additional_constraints, points)
+updated_points = apply_constraints_and_move(initial_constraints, additional_constraints, points)
 
 print(updated_points)
 

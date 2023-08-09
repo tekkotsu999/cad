@@ -42,6 +42,7 @@ class VerticalConstraint:
         self.point2_idx = point2_idx
     
     # This constraint ensures that the x-coordinates of the two points are the same.
+    # 制約としてはこの差が0とすることで扱う
     def __call__(self, points_flat):
         x1 = points_flat[self.point1_idx * 2]
         x2 = points_flat[self.point2_idx * 2]
