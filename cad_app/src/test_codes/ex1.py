@@ -2,7 +2,7 @@ from points import Point
 from lines import Line
 from constraints import FixedPointConstraint, FixedLengthConstraint
 from optimize import move_point
-
+from plot_results import plot_points
 
 # 初期座標と目標座標を設定します。
 a = Point(200, 100)
@@ -31,6 +31,6 @@ target_position = Point(600, 300)
 # 点cを目標点に移動させます。
 new_points = move_point(c, target_position, constraints, points)
 
-# 新しい座標を表示します。
-for point in new_points:
-    print(point)
+print(new_points)
+
+plot_points(points, new_points)
