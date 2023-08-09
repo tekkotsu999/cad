@@ -32,3 +32,23 @@ class FixedLengthConstraint:
         point2 = Point(*points_flat[self.point2_idx * 2: self.point2_idx * 2 + 2])
         current_length = Line(point1, point2).length
         return current_length - self.initial_length
+
+
+# Defining VerticalConstraint class
+# このクラスは、2つの点間の線が垂直であることを保証するための制約を提供する
+class VerticalConstraint:
+    def __init__(self, point1_idx, point2_idx):
+        self.point1_idx = point1_idx
+        self.point2_idx = point2_idx
+    
+    # This constraint ensures that the x-coordinates of the two points are the same.
+    # 制約としてはこの差が0とすることで扱う
+    def __call__(self, points_flat):
+        x1 = points_flat[self.point1_idx * 2]
+        x2 = points_flat[self.point2_idx * 2]
+        return x1 - x2
+
+# Testing the VerticalConstraint class
+# points_flat_example = [2, 1, 4, 5]  # Represents points a(2,1) and b(4,5)
+# vc = VerticalConstraint(0, 1)
+# vc(points_flat_example)  # This should return the difference between x-coordinates of points a and b.
