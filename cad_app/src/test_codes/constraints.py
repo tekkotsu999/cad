@@ -2,13 +2,6 @@ from points import Point
 from lines import Line
 import numpy as np
 
-__all__ = [
-    "FixedPointConstraint",
-    "FixedLengthConstraint", 
-    "VerticalConstraint",
-    "HorizontalConstraint"
-]
-
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する
 # ポイントのインデックスを引数として取り、そのポイントの位置を最適化変数から取得する
 class FixedPointConstraint:
@@ -76,3 +69,134 @@ class HorizontalConstraint:
         y1 = points_flat[self.point1_idy * 2 + 1]
         y2 = points_flat[self.point2_idy * 2 + 1]
         return y1 - y2
+
+# Define the CoincidentPointsConstraint class
+# 点と点の一致拘束
+class CoincidentPointsConstraint:
+    def __init__(self, point1_idx, point2_idx):
+        self.point1_idx = point1_idx
+        self.point2_idx = point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the two points
+        point1_position = np.array(points_flat[self.point1_idx * 2: self.point1_idx * 2 + 2])
+        point2_position = np.array(points_flat[self.point2_idx * 2: self.point2_idx * 2 + 2])
+        
+        # Compute the difference vector between the two points
+        diff_vector = point1_position - point2_position
+        
+        # Return the norm of the difference vector. This value should be minimized to zero for the two points to coincide.
+        return np.linalg.norm(diff_vector)
+
+
+# Define the PointOnLineConstraint class
+# 点と線の一致拘束
+# 線上の任意の点は、線の両端の点を使って、以下のパラメータ方程式で表現できる：
+#   x = x_1 + t * ( x_2 - x_1 )
+#   y = y_1 + t * ( y_2 - y_2 )
+# ここで、tは0から1の間のパラメータである。
+# 点が直線上にある場合、その点のxとy座標は、上記の方程式を満たすtが存在する。
+# これを利用して「点と線の一致拘束」を定義する。
+class PointOnLineConstraint:
+    def __init__(self, point_idx, line_point1_idx, line_point2_idx):
+        self.point_idx = point_idx
+        self.line_point1_idx = line_point1_idx
+        self.line_point2_idx = line_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the point and the line's endpoints
+        point_position = np.array(points_flat[self.point_idx * 2: self.point_idx * 2 + 2])
+        line_point1_position = np.array(points_flat[self.line_point1_idx * 2: self.line_point1_idx * 2 + 2])
+        line_point2_position = np.array(points_flat[self.line_point2_idx * 2: self.line_point2_idx * 2 + 2])
+        
+        # Compute the t values for x and y
+        if line_point2_position[0] - line_point1_position[0] != 0:  # Avoid division by zero
+            t_x = (point_position[0] - line_point1_position[0]) / (line_point2_position[0] - line_point1_position[0])
+        else:
+            t_x = 0
+        
+        if line_point2_position[1] - line_point1_position[1] != 0:  # Avoid division by zero
+            t_y = (point_position[1] - line_point1_position[1]) / (line_point2_position[1] - line_point1_position[1])
+        else:
+            t_y = 0
+        
+        # Return the difference between the computed t values. This value should be minimized to zero for the point to lie on the line.
+        return t_x - t_y
+
+# Define the ParallelLinesConstraint class
+# 線と線の平行拘束
+# 2つの線が平行である場合、それらの線の方向ベクトルが一致するか、または逆向きである必要がある。
+# 方向ベクトルは線の両端の点を使用して計算する
+class ParallelLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the direction vectors for each line
+        dir_vector1 = line1_point2_position - line1_point1_position
+        dir_vector2 = line2_point2_position - line2_point1_position
+        
+        # Calculate the cross product of the two direction vectors. If they are parallel, this value will be zero.
+        cross_product = np.cross(dir_vector1, dir_vector2)
+        
+        return cross_product
+
+# Define the PerpendicularLinesConstraint class
+# 線と線の垂直拘束
+# 2つの線が垂直である場合、それらの線の方向ベクトルのドット積は0である必要がある
+# 方向ベクトルは線の両端の点を使用して計算する
+class PerpendicularLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the direction vectors for each line
+        dir_vector1 = line1_point2_position - line1_point1_position
+        dir_vector2 = line2_point2_position - line2_point1_position
+        
+        # Calculate the dot product of the two direction vectors. If they are perpendicular, this value will be zero.
+        dot_product = np.dot(dir_vector1, dir_vector2)
+        
+        return dot_product
+
+# Define the EqualLengthLinesConstraint class
+# 線長一致拘束
+# 2つの線の長さの差を計算し、その差が0になるように制約を適用する
+class EqualLengthLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the lengths of each line
+        length1 = np.linalg.norm(line1_point2_position - line1_point1_position)
+        length2 = np.linalg.norm(line2_point2_position - line2_point1_position)
+        
+        # Return the difference in lengths
+        return length1 - length2
