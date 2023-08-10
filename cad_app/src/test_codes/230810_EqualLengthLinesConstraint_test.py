@@ -30,6 +30,7 @@ constraints = [
 
 # Apply the constraints and get the updated positions
 updated_points = apply_constraints(constraints, points)
+print(updated_points)
 updated_lines = [
     Line(updated_points[0], updated_points[1]),
     Line(updated_points[1], updated_points[2]),

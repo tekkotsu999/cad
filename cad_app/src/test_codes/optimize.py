@@ -75,6 +75,10 @@ def apply_constraints(constraints, points):
     # Use 'SLSQP' method as it supports equality constraints
     res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
     
+    # Check if the optimizer has converged
+    if not res.success:
+        print("Warning: Optimization did not converge! Message:", res.message)
+
     # Extract the updated points from the result
     updated_points_flat = res.x
     updated_points = []
