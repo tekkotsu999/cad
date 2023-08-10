@@ -1,7 +1,7 @@
 from points import Point
 from lines import Line
-from constraints import FixedPointConstraint, FixedLengthConstraint, VerticalConstraint
-from optimize import move_point, apply_constraints_and_move
+from constraints import *
+from optimize import apply_constraints
 from plot_results import plot_points
 
 # Define the points and lines
@@ -20,7 +20,7 @@ initial_constraints = [
 additional_constraints = [VerticalConstraint(0, 1)]
 
 # Apply the constraints and get the updated positions
-updated_points = apply_constraints_and_move(initial_constraints, additional_constraints, points)
+updated_points = apply_constraints(initial_constraints + additional_constraints, points)
 
 print(updated_points)
 

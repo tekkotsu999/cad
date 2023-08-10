@@ -1,6 +1,6 @@
 from points import Point
 from lines import Line
-from constraints import FixedPointConstraint, FixedLengthConstraint
+from constraints import *
 from optimize import move_point
 from plot_results import plot_points
 

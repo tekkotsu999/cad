@@ -56,7 +56,7 @@ def move_point(target_point, target_position, constraints, points):
     return updated_points
 
 
-def apply_constraints_and_move(initial_constraints, additional_constraints, points):
+def apply_constraints(constraints, points):
     # Flatten the points for optimization
     initial_points_flat = []
     for point in points:
@@ -65,7 +65,7 @@ def apply_constraints_and_move(initial_constraints, additional_constraints, poin
     
     # Convert constraints to format suitable for scipy's minimize function    
     constraints_for_optimization = []
-    for c in initial_constraints + additional_constraints:
+    for c in constraints:
         constraint_dict = {'type': 'eq', 'fun': c}
         constraints_for_optimization.append(constraint_dict)
 
