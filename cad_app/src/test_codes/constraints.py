@@ -52,3 +52,20 @@ class VerticalConstraint:
 # points_flat_example = [2, 1, 4, 5]  # Represents points a(2,1) and b(4,5)
 # vc = VerticalConstraint(0, 1)
 # vc(points_flat_example)  # This should return the difference between x-coordinates of points a and b.
+
+
+
+# Defining HorizontalConstraint class
+# このクラスは、2つの点間の線が水平であることを保証するための制約を提供する
+class HorizontalConstraint:
+    def __init__(self, point1_idy, point2_idy):
+        self.point1_idy = point1_idy
+        self.point2_idy = point2_idy
+    
+
+    # This constraint ensures that the y-coordinates of the two points are the same.
+    # 制約としてはこの差が0とすることで扱う
+    def __call__(self, points_flat):
+        y1 = points_flat[self.point1_idy * 2 + 1]
+        y2 = points_flat[self.point2_idy * 2 + 1]
+        return y1 - y2
