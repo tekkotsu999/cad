@@ -1,6 +1,6 @@
 from points import Point
 from lines import Line
-from constraints import FixedPointConstraint, FixedLengthConstraint
+from constraints import *
 import numpy as np
 from scipy.optimize import minimize
 from copy import deepcopy
