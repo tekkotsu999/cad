@@ -71,6 +71,7 @@ class HorizontalConstraint:
         return y1 - y2
 
 # Define the CoincidentPointsConstraint class
+# 点と点の一致拘束
 class CoincidentPointsConstraint:
     def __init__(self, point1_idx, point2_idx):
         self.point1_idx = point1_idx
@@ -87,3 +88,37 @@ class CoincidentPointsConstraint:
         # Return the norm of the difference vector. This value should be minimized to zero for the two points to coincide.
         return np.linalg.norm(diff_vector)
 
+
+# Define the PointOnLineConstraint class
+# 点と線の一致拘束
+# 線上の任意の点は、線の両端の点を使って、以下のパラメータ方程式で表現できる：
+#   x = x_1 + t * ( x_2 - x_1 )
+#   y = y_1 + t * ( y_2 - y_2 )
+# ここで、tは0から1の間のパラメータである。
+# 点が直線上にある場合、その点のxとy座標は、上記の方程式を満たすtが存在する。
+# これを利用して「点と線の一致拘束」を定義する。
+class PointOnLineConstraint:
+    def __init__(self, point_idx, line_point1_idx, line_point2_idx):
+        self.point_idx = point_idx
+        self.line_point1_idx = line_point1_idx
+        self.line_point2_idx = line_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the point and the line's endpoints
+        point_position = np.array(points_flat[self.point_idx * 2: self.point_idx * 2 + 2])
+        line_point1_position = np.array(points_flat[self.line_point1_idx * 2: self.line_point1_idx * 2 + 2])
+        line_point2_position = np.array(points_flat[self.line_point2_idx * 2: self.line_point2_idx * 2 + 2])
+        
+        # Compute the t values for x and y
+        if line_point2_position[0] - line_point1_position[0] != 0:  # Avoid division by zero
+            t_x = (point_position[0] - line_point1_position[0]) / (line_point2_position[0] - line_point1_position[0])
+        else:
+            t_x = 0
+        
+        if line_point2_position[1] - line_point1_position[1] != 0:  # Avoid division by zero
+            t_y = (point_position[1] - line_point1_position[1]) / (line_point2_position[1] - line_point1_position[1])
+        else:
+            t_y = 0
+        
+        # Return the difference between the computed t values. This value should be minimized to zero for the point to lie on the line.
+        return t_x - t_y
