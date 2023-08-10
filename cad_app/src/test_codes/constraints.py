@@ -176,3 +176,27 @@ class PerpendicularLinesConstraint:
         dot_product = np.dot(dir_vector1, dir_vector2)
         
         return dot_product
+
+# Define the EqualLengthLinesConstraint class
+# 線長一致拘束
+# 2つの線の長さの差を計算し、その差が0になるように制約を適用する
+class EqualLengthLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the lengths of each line
+        length1 = np.linalg.norm(line1_point2_position - line1_point1_position)
+        length2 = np.linalg.norm(line2_point2_position - line2_point1_position)
+        
+        # Return the difference in lengths
+        return length1 - length2
