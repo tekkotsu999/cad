@@ -2,13 +2,6 @@ from points import Point
 from lines import Line
 import numpy as np
 
-__all__ = [
-    "FixedPointConstraint",
-    "FixedLengthConstraint", 
-    "VerticalConstraint",
-    "HorizontalConstraint"
-]
-
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する
 # ポイントのインデックスを引数として取り、そのポイントの位置を最適化変数から取得する
 class FixedPointConstraint:
@@ -76,3 +69,21 @@ class HorizontalConstraint:
         y1 = points_flat[self.point1_idy * 2 + 1]
         y2 = points_flat[self.point2_idy * 2 + 1]
         return y1 - y2
+
+# Define the CoincidentPointsConstraint class
+class CoincidentPointsConstraint:
+    def __init__(self, point1_idx, point2_idx):
+        self.point1_idx = point1_idx
+        self.point2_idx = point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the two points
+        point1_position = np.array(points_flat[self.point1_idx * 2: self.point1_idx * 2 + 2])
+        point2_position = np.array(points_flat[self.point2_idx * 2: self.point2_idx * 2 + 2])
+        
+        # Compute the difference vector between the two points
+        diff_vector = point1_position - point2_position
+        
+        # Return the norm of the difference vector. This value should be minimized to zero for the two points to coincide.
+        return np.linalg.norm(diff_vector)
+
