@@ -122,3 +122,57 @@ class PointOnLineConstraint:
         
         # Return the difference between the computed t values. This value should be minimized to zero for the point to lie on the line.
         return t_x - t_y
+
+# Define the ParallelLinesConstraint class
+# 線と線の平行拘束
+# 2つの線が平行である場合、それらの線の方向ベクトルが一致するか、または逆向きである必要がある。
+# 方向ベクトルは線の両端の点を使用して計算する
+class ParallelLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the direction vectors for each line
+        dir_vector1 = line1_point2_position - line1_point1_position
+        dir_vector2 = line2_point2_position - line2_point1_position
+        
+        # Calculate the cross product of the two direction vectors. If they are parallel, this value will be zero.
+        cross_product = np.cross(dir_vector1, dir_vector2)
+        
+        return cross_product
+
+# Define the PerpendicularLinesConstraint class
+# 線と線の垂直拘束
+# 2つの線が垂直である場合、それらの線の方向ベクトルのドット積は0である必要がある
+# 方向ベクトルは線の両端の点を使用して計算する
+class PerpendicularLinesConstraint:
+    def __init__(self, line1_point1_idx, line1_point2_idx, line2_point1_idx, line2_point2_idx):
+        self.line1_point1_idx = line1_point1_idx
+        self.line1_point2_idx = line1_point2_idx
+        self.line2_point1_idx = line2_point1_idx
+        self.line2_point2_idx = line2_point2_idx
+
+    def __call__(self, points_flat):
+        # Extract the positions of the line's endpoints
+        line1_point1_position = np.array(points_flat[self.line1_point1_idx * 2: self.line1_point1_idx * 2 + 2])
+        line1_point2_position = np.array(points_flat[self.line1_point2_idx * 2: self.line1_point2_idx * 2 + 2])
+        line2_point1_position = np.array(points_flat[self.line2_point1_idx * 2: self.line2_point1_idx * 2 + 2])
+        line2_point2_position = np.array(points_flat[self.line2_point2_idx * 2: self.line2_point2_idx * 2 + 2])
+        
+        # Calculate the direction vectors for each line
+        dir_vector1 = line1_point2_position - line1_point1_position
+        dir_vector2 = line2_point2_position - line2_point1_position
+        
+        # Calculate the dot product of the two direction vectors. If they are perpendicular, this value will be zero.
+        dot_product = np.dot(dir_vector1, dir_vector2)
+        
+        return dot_product
