@@ -5,6 +5,8 @@ class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+    def __repr__(self):
+        return f"Point(x={self.x}, y={self.y})"
 
 class Line:
     def __init__(self, p1, p2):
@@ -27,7 +29,13 @@ def run_optimization(data):
     bc = Line(b, c)
     cd = Line(c, d)
     da = Line(d, a)
-
+    
+    # print(a)
+    # print(b)
+    # print(c)
+    # print(d)
+    # print(dx,dy)
+    
     def objective(z):
         return ((c.x+dx)-z[2]) ** 2 + ((c.y+dy)-z[3]) ** 2
 
@@ -49,9 +57,13 @@ def run_optimization(data):
     sol = minimize(objective, x0, constraints=cons, method='SLSQP')
 
     result = {
-        'b': {'x': sol.x[0], 'y': sol.x[1]},
-        'c': {'x': sol.x[2], 'y': sol.x[3]}
+        'a': { 'x': a.x, 'y': a.y },
+        'b': { 'x': sol.x[0], 'y': sol.x[1] },
+        'c': { 'x': sol.x[2], 'y': sol.x[3] },
+        'd': { 'x': d.x, 'y': d.y }
     }
+    
+    # print(result)
 
     return result
 
