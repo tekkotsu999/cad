@@ -68,7 +68,6 @@ class Camera {
 // 再描画関数
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawShapesFromCache(); // キャッシュから描画（ちらつき防止）
 
   // グリッド線の描画
   drawGrid(ctx);
@@ -80,6 +79,8 @@ function draw() {
   ctx.beginPath();
   ctx.arc(canvasPoint.x, canvasPoint.y, 5, 0, 2 * Math.PI);
   ctx.fill();
+
+  drawShapesFromCache(); // キャッシュから描画（ちらつき防止）
 
   // バックエンドから全て図形情報を取得し、描画
   getShapesFromBackend();
