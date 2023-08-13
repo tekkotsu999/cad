@@ -80,6 +80,9 @@ function draw() {
   ctx.arc(canvasPoint.x, canvasPoint.y, 5, 0, 2 * Math.PI);
   ctx.fill();
 
+  // バックエンドから全て図形情報を取得し、描画
+  getShapesFromBackend();
+
   // CAD座標系の表示
   displayCADCoordinates();
 
@@ -167,6 +170,37 @@ function displayCADCoordinates() {
 }
 
 
+function sendShapeToBackend(shape, cadCoordinates) {
+    // console.log("sendShapeToBackend");
+    // Ajaxを使用してバックエンドにPOSTリクエストを送信
+    fetch('/add_shape', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ shape: shape, coordinates: cadCoordinates }),
+    });
+}
+
+
+function getShapesFromBackend() {
+    // console.log("getShapesFromBackend");
+    fetch('/get_shapes')
+        .then(response => response.json())
+        .then(data => {
+            data.shapes.forEach(shape => {
+                const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
+                if (shape.type === 'Point') {
+                    ctx.beginPath();
+                    ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+                // 他の図形の描画もここに追加
+            });
+        });
+}
+
+
 // **************************************************************
 
 // DPIから変換率を計算
@@ -176,7 +210,6 @@ var conversionRate = dpi / 25.4;
 
 // canvas要素の取得
 let canvas = document.getElementById('myCanvas');
-//let ctx = canvas.getContext('2d');
 
 // 実際の描画サイズを調整
 canvas.width = canvas.offsetWidth * dpr;
@@ -190,6 +223,9 @@ canvas.style.height = canvas.offsetHeight + 'px';
 var ctx = canvas.getContext('2d');
 ctx.scale(dpr, dpr);
 
+// 描画する図形の種類の取得
+const shapeSelect = document.getElementById('shapeSelect');
+
 // Camera
 const camera = new Camera(conversionRate);
 
@@ -200,8 +236,22 @@ draw();
 
 // **************************************************************
 
+// 左クリック
+canvas.addEventListener('click', (event) => {
+    const shape = shapeSelect.value;
+    const canvasX = event.clientX - canvas.getBoundingClientRect().left;
+    const canvasY = event.clientY - canvas.getBoundingClientRect().top;
+    const cadCoordinates = camera.toCAD(canvasX, canvasY);
+
+    // ここでバックエンドに送信
+    sendShapeToBackend(shape, cadCoordinates);
+
+    draw();
+});
+
 let isDragging = false;
 let lastMousePosition = null;
+
 
 // ズームイン、ズームアウト
 canvas.addEventListener('wheel', (event) => {
@@ -233,7 +283,7 @@ canvas.addEventListener('mousedown', (event) => {
 // ドラッグ中のマウス移動
 canvas.addEventListener('mousemove', (event) => {
   if (isDragging) {
-    console.log("マウス移動");
+    // console.log("マウス移動");
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;

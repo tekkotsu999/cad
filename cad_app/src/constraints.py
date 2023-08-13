@@ -1,5 +1,5 @@
-from points import Point
-from lines import Line
+from .points import Point
+from .lines import Line
 import numpy as np
 
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する

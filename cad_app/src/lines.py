@@ -1,4 +1,4 @@
-from points import Point
+from .points import Point
 import numpy as np
 
 # 2つのPointインスタンスを結ぶLineクラスを定義
