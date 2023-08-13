@@ -1,8 +1,10 @@
 // カメラクラス
 class Camera {
-  constructor() {
-    this.position = { x: 0, y: 0 }; // カメラの位置
-    this.zoom = 1; // ズームレベル
+  constructor(conversionRate) {
+    this.position = { x: 0, y: 0 }; // カメラの位置（CAD座標系）
+    this.scale = 1; // スケール
+    this.conversionRate = conversionRate; // mmからpxへの変換率
+    console.log(conversionRate);
   }
 
   // CAD座標系からCanvas座標系への変換行列
@@ -11,8 +13,8 @@ class Camera {
   // カメラの位置に応じた平行移動
   toCanvas(x, y) {
     const matrix = [
-      [this.zoom, 0,          -this.position.x * this.zoom],
-      [0,         -this.zoom,  this.position.y * this.zoom]
+      [this.scale * this.conversionRate, 0,          -this.position.x * this.scale * this.conversionRate],
+      [0,          -this.scale * this.conversionRate, this.position.y * this.scale * this.conversionRate]
     ];
     const newX = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2];
     const newY = matrix[1][0] * x + matrix[1][1] * y + matrix[1][2];
@@ -23,11 +25,18 @@ class Camera {
   // X方向のズームの逆変換
   // Y方向のズームの逆変換（反転）
   // 平行移動の逆変換
-  toCAD(x, y) {
-    const invZoom = 1 / this.zoom;
+  toCAD(x, y, isDelta = false) {
+    if (isDelta) {
+      return {
+        x: x / (this.scale * this.conversionRate),
+        y: -y / (this.scale * this.conversionRate)
+      };
+    }
+    
+    const invScale = 1 / (this.scale * this.conversionRate);
     const matrix = [
-      [invZoom, 0,        this.position.x],
-      [0,       -invZoom, this.position.y]
+      [invScale, 0,        this.position.x],
+      [0,        -invScale, this.position.y]
     ];
     const newX = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2];
     const newY = matrix[1][0] * x + matrix[1][1] * y + matrix[1][2];
@@ -42,41 +51,23 @@ class Camera {
 
   zoomIn(factor, mouseX, mouseY) {
     const beforeZoomCAD = this.toCAD(mouseX, mouseY);
-    this.zoom *= factor;
+    this.scale *= factor;
     const afterZoomCAD = this.toCAD(mouseX, mouseY);
     this.move(beforeZoomCAD.x - afterZoomCAD.x, beforeZoomCAD.y - afterZoomCAD.y);
   }
 
   zoomOut(factor, mouseX, mouseY) {
     const beforeZoomCAD = this.toCAD(mouseX, mouseY);
-    this.zoom /= factor;
+    this.scale /= factor;
     const afterZoomCAD = this.toCAD(mouseX, mouseY);
     this.move(beforeZoomCAD.x - afterZoomCAD.x, beforeZoomCAD.y - afterZoomCAD.y);
   }
 }
 
 
-// canvas要素の取得
-let canvas = document.getElementById('myCanvas');
-let ctx = canvas.getContext('2d');
-
-// Camera
-const camera = new Camera();
-
-// CAD座標系の点を例として
-const cadPoint = { x: 30, y: 20 };
-
-
 // 再描画関数
 function draw() {
-  //let canvas = document.getElementById('myCanvas');
-  //let ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  //const camera = new Camera();
-
-  // CAD座標系の点を例として
-  // const cadPoint = { x: 30, y: 20 };
 
   // グリッド線の描画
   drawGrid(ctx);
@@ -93,7 +84,6 @@ function draw() {
   displayCADCoordinates();
 
 }
-
 
 
 function drawGrid(ctx) {
@@ -113,6 +103,8 @@ function drawGrid(ctx) {
   drawAxisLine(ctx, leftTopCAD, rightBottomCAD, 0, true); // X=0
   drawAxisLine(ctx, leftTopCAD, rightBottomCAD, 0, false); // Y=0
 }
+
+
 
 function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
   // X方向のグリッド線
@@ -136,6 +128,8 @@ function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
   }
 }
 
+
+
 function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
   const start = isXAxis ? camera.toCanvas(value, leftTopCAD.y) : camera.toCanvas(leftTopCAD.x, value);
   const end = isXAxis ? camera.toCanvas(value, rightBottomCAD.y) : camera.toCanvas(rightBottomCAD.x, value);
@@ -145,21 +139,8 @@ function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
   ctx.stroke();
 }
 
-// ズームイン、ズームアウト
-canvas.addEventListener('wheel', (event) => {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - rect.left;
-  const mouseY = event.clientY - rect.top;
 
-  if (event.deltaY < 0) {
-    camera.zoomIn(1.1, mouseX, mouseY);
-  } else {
-    camera.zoomOut(1.1, mouseX, mouseY);
-  }
-  draw(); // 再描画
-});
-
-
+// Canvas要素の現在のスケールを表示する
 // Canvas要素の左上と右下がCAD座標系においてどこなのかをHTML上に表示する
 function displayCADCoordinates() {
   let canvas = document.getElementById('myCanvas');
@@ -172,11 +153,121 @@ function displayCADCoordinates() {
   const leftTopCAD = camera.toCAD(leftTopCanvas.x, leftTopCanvas.y);
   const rightBottomCAD = camera.toCAD(rightBottomCanvas.x, rightBottomCanvas.y);
 
+  // 小数点以下3桁にフォーマット
+  const leftTopX = leftTopCAD.x.toFixed(3);
+  const leftTopY = leftTopCAD.y.toFixed(3);
+  const rightBottomX = rightBottomCAD.x.toFixed(3);
+  const rightBottomY = rightBottomCAD.y.toFixed(3);
+  const currentScale = camera.scale.toFixed(3);
+
   // HTMLに表示
-  document.getElementById('leftTop').innerText = `Left Top Coordinate: (${leftTopCAD.x}, ${leftTopCAD.y})`;
-  document.getElementById('rightBottom').innerText = `Right Bottom Coordinate: (${rightBottomCAD.x}, ${rightBottomCAD.y})`;
+  document.getElementById('leftTop').innerText = `Left Top Coordinate: (${leftTopX}, ${leftTopY})`;
+  document.getElementById('rightBottom').innerText = `Right Bottom Coordinate: (${rightBottomX}, ${rightBottomY})`;
+  document.getElementById('scale').innerText = `Current Scale: ${currentScale}`;
 }
 
+
+// **************************************************************
+
+// DPIから変換率を計算
+var dpr = window.devicePixelRatio || 1;
+var dpi = dpr * 96;
+var conversionRate = dpi / 25.4;
+
+// canvas要素の取得
+let canvas = document.getElementById('myCanvas');
+//let ctx = canvas.getContext('2d');
+
+// 実際の描画サイズを調整
+canvas.width = canvas.offsetWidth * dpr;
+canvas.height = canvas.offsetHeight * dpr;
+
+// CSSで表示サイズを調整
+canvas.style.width = canvas.offsetWidth + 'px';
+canvas.style.height = canvas.offsetHeight + 'px';
+
+// コンテキストのスケールを調整
+var ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+// Camera
+const camera = new Camera(conversionRate);
+
+// CAD座標系の点を例として
+const cadPoint = { x: 30, y: 20 };
+
+
+// **************************************************************
+
+let isDragging = false;
+let lastMousePosition = null;
+
+// ズームイン、ズームアウト
+canvas.addEventListener('wheel', (event) => {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  if (event.deltaY < 0) {
+    camera.zoomOut(1.1, mouseX, mouseY);
+  } else {
+    camera.zoomIn(1.1, mouseX, mouseY);
+  }
+  draw(); // 再描画
+});
+
+
+// 右クリックでのドラッグ開始
+canvas.addEventListener('mousedown', (event) => {
+  if (event.button === 2) { // 右クリック
+    isDragging = true;
+
+    // Canvas要素に対する相対座標を取得する
+    const rect = canvas.getBoundingClientRect();
+    lastMousePosition = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+});
+
+
+// ドラッグ中のマウス移動
+canvas.addEventListener('mousemove', (event) => {
+  if (isDragging) {
+    console.log("マウス移動");
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Canvas座標系上でのマウスの移動量
+    const dxCanvas = mouseX - lastMousePosition.x;
+    const dyCanvas = mouseY - lastMousePosition.y;
+
+    // CAD座標系上での移動量に変換
+    const movementCAD = camera.toCAD(-dxCanvas, -dyCanvas, true);
+
+    // カメラを移動
+    camera.move(movementCAD.x, movementCAD.y);
+
+    // マウス位置の更新
+    lastMousePosition = { x: mouseX, y: mouseY };
+
+    // 再描画
+    draw();
+  }
+});
+
+// ドラッグ終了
+canvas.addEventListener('mouseup', (event) => {
+  if (event.button === 2) { // 右クリック
+    isDragging = false;
+  }
+});
+
+// 右クリックメニューの無効化
+canvas.addEventListener('contextmenu', (event) => {
+  event.preventDefault();
+});
+
+// **************************************************************
 
 // 初期データ（CAD座標系で定義）
 //let data = {
