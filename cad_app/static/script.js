@@ -145,7 +145,7 @@ function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
   ctx.stroke();
 }
 
-
+// ズームイン、ズームアウト
 canvas.addEventListener('wheel', (event) => {
   const rect = canvas.getBoundingClientRect();
   const mouseX = event.clientX - rect.left;
