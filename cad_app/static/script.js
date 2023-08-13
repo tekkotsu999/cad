@@ -68,6 +68,7 @@ class Camera {
 // 再描画関数
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawShapesFromCache(); // キャッシュから描画（ちらつき防止）
 
   // グリッド線の描画
   drawGrid(ctx);
@@ -184,22 +185,27 @@ function sendShapeToBackend(shape, cadCoordinates) {
 
 
 function getShapesFromBackend() {
-    // console.log("getShapesFromBackend");
-    fetch('/get_shapes')
-        .then(response => response.json())
-        .then(data => {
-            data.shapes.forEach(shape => {
-                const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
-                if (shape.type === 'Point') {
-                    ctx.beginPath();
-                    ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-                // 他の図形の描画もここに追加
-            });
-        });
+  // console.log("getShapesFromBackend");
+  fetch('/get_shapes')
+    .then(response => response.json())
+    .then(data => {
+      shapesCache = data.shapes; // ローカルキャッシュに保存
+      drawShapesFromCache(); // キャッシュから描画
+    });
 }
 
+
+function drawShapesFromCache() {
+  shapesCache.forEach(shape => {
+    const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
+    if (shape.type === 'Point') {
+      ctx.beginPath();
+      ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    // 他の図形の描画もここに追加
+  });
+}
 
 // **************************************************************
 
@@ -231,6 +237,9 @@ const camera = new Camera(conversionRate);
 
 // CAD座標系の点を例として
 const cadPoint = { x: 30, y: 20 };
+
+// バックエンドから取得した図形情報のローカルキャッシュ
+let shapesCache = [];
 
 draw();
 
