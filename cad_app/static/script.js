@@ -196,6 +196,7 @@ const camera = new Camera(conversionRate);
 // CAD座標系の点を例として
 const cadPoint = { x: 30, y: 20 };
 
+draw();
 
 // **************************************************************
 
