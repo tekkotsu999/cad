@@ -265,6 +265,10 @@ let lastMousePosition = null;
 
 // ズームイン、ズームアウト
 canvas.addEventListener('wheel', (event) => {
+
+  // イベントのデフォルト動作（スクロール）を無効化
+  event.preventDefault();
+
   const rect = canvas.getBoundingClientRect();
   const mouseX = event.clientX - rect.left;
   const mouseY = event.clientY - rect.top;
@@ -275,7 +279,7 @@ canvas.addEventListener('wheel', (event) => {
     camera.zoomIn(1.1, mouseX, mouseY);
   }
   draw(); // 再描画
-});
+}, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
 
 // 右クリックでのドラッグ開始
