@@ -4,7 +4,7 @@ class Camera {
     this.position = { x: 0, y: 0 }; // カメラの位置（CAD座標系）
     this.scale = 1; // スケール
     this.conversionRate = conversionRate; // mmからpxへの変換率
-    console.log(conversionRate);
+    console.log("conversionRate = ", conversionRate);
   }
 
   // CAD座標系からCanvas座標系への変換行列
@@ -212,23 +212,21 @@ function drawShapesFromCache() {
 
 // DPIから変換率を計算
 var dpr = window.devicePixelRatio || 1;
+console.log("dpr=",dpr);
+
+// 96DPIは、基準解像度
+// 基準解像度に、dprを掛け合わせることで、「１インチあたりの物理ピクセル数」を計算できる
+// 例えば、高解像度デバイスを使っていてdpr=1.25の場合、1インチあたり120(=96*125)物理ピクセルになる
 var dpi = dpr * 96;
+
+// 「1ミリ当たりの物理ピクセル数」の計算
 var conversionRate = dpi / 25.4;
 
 // canvas要素の取得
 let canvas = document.getElementById('myCanvas');
 
-// 実際の描画サイズを調整
-canvas.width = canvas.offsetWidth * dpr;
-canvas.height = canvas.offsetHeight * dpr;
-
-// CSSで表示サイズを調整
-canvas.style.width = canvas.offsetWidth + 'px';
-canvas.style.height = canvas.offsetHeight + 'px';
-
 // コンテキストのスケールを調整
 var ctx = canvas.getContext('2d');
-ctx.scale(dpr, dpr);
 
 // 描画する図形の種類の取得
 const shapeSelect = document.getElementById('shapeSelect');
@@ -242,25 +240,35 @@ const cadPoint = { x: 30, y: 20 };
 // バックエンドから取得した図形情報のローカルキャッシュ
 let shapesCache = [];
 
+// マウス座標を表示するためのdivを取得
+const mouseCoordinatesDiv = document.getElementById('mouse-coordinates');
+
 draw();
 
 // **************************************************************
+// 以下、イベントリスナー
 
-// 左クリック
+// マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
+    // shapeの選択
     const shape = shapeSelect.value;
-    const canvasX = event.clientX - canvas.getBoundingClientRect().left;
-    const canvasY = event.clientY - canvas.getBoundingClientRect().top;
+
+    // canvasの絶対位置を一度取得して変数に格納
+    const rect = canvas.getBoundingClientRect();
+
+    // canvas内での相対座標を計算
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+
+    // canvas座標をCAD座標に変換
     const cadCoordinates = camera.toCAD(canvasX, canvasY);
 
     // ここでバックエンドに送信
     sendShapeToBackend(shape, cadCoordinates);
 
+    // 描画
     draw();
 });
-
-let isDragging = false;
-let lastMousePosition = null;
 
 
 // ズームイン、ズームアウト
@@ -282,6 +290,10 @@ canvas.addEventListener('wheel', (event) => {
 }, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
 
+let isDragging = false;
+let lastMousePosition = null;
+
+
 // 右クリックでのドラッグ開始
 canvas.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // 右クリック
@@ -296,15 +308,20 @@ canvas.addEventListener('mousedown', (event) => {
 
 // ドラッグ中のマウス移動
 canvas.addEventListener('mousemove', (event) => {
-  if (isDragging) {
-    // console.log("マウス移動");
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+  // canvasの絶対位置を取得
+  const rect = canvas.getBoundingClientRect();
 
+  // canvas内での相対座標を計算
+  const canvasX = event.clientX - rect.left;
+  const canvasY = event.clientY - rect.top;
+  
+  // 座標をHTMLに出力
+  mouseCoordinatesDiv.innerHTML = `Canvas X: ${canvasX}, Canvas Y: ${canvasY}`;
+
+  if (isDragging) {
     // Canvas座標系上でのマウスの移動量
-    const dxCanvas = mouseX - lastMousePosition.x;
-    const dyCanvas = mouseY - lastMousePosition.y;
+    const dxCanvas = canvasX - lastMousePosition.x;
+    const dyCanvas = canvasY - lastMousePosition.y;
 
     // CAD座標系上での移動量に変換
     const movementCAD = camera.toCAD(-dxCanvas, -dyCanvas, true);
@@ -313,7 +330,7 @@ canvas.addEventListener('mousemove', (event) => {
     camera.move(movementCAD.x, movementCAD.y);
 
     // マウス位置の更新
-    lastMousePosition = { x: mouseX, y: mouseY };
+    lastMousePosition = { x: canvasX, y: canvasY };
 
     // 再描画
     draw();
