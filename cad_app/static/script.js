@@ -211,15 +211,16 @@ function drawShapesFromCache() {
 // **************************************************************
 
 // DPIから変換率を計算
-var dpr = window.devicePixelRatio || 1;
-console.log("dpr=",dpr);
+//var dpr = window.devicePixelRatio || 1;
+//console.log("dpr=",dpr);
 
 // 96DPIは、基準解像度
 // 基準解像度に、dprを掛け合わせることで、「１インチあたりの物理ピクセル数」を計算できる
 // 例えば、高解像度デバイスを使っていてdpr=1.25の場合、1インチあたり120(=96*125)物理ピクセルになる
-var dpi = dpr * 96;
+// var dpi = dpr * 96;
 
 // 「1ミリ当たりの物理ピクセル数」の計算
+var dpi = 100;
 var conversionRate = dpi / 25.4;
 
 // canvas要素の取得
