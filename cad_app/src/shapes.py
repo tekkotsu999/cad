@@ -10,9 +10,10 @@ class ShapeManager:
             point = Point(coordinates['x'], coordinates['y'])
             self.shapes.append(point)
         elif shape_type == 'Line':
-            # 線の場合の処理
-            pass
-        # 他の図形もここに追加
+            start = Point(coordinates['start']['x'], coordinates['start']['y'])
+            end = Point(coordinates['end']['x'], coordinates['end']['y'])
+            line = Line(start, end)
+            self.shapes.append(line)
 
     def get_shapes(self):
         return self.shapes

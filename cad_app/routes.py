@@ -28,6 +28,7 @@ def add_shape():
     data = request.json
     shape_type = data['shape']
     coordinates = data['coordinates']
+
     shape_manager.add_shape(shape_type, coordinates)
 
     # フロントエンドに送り返すデータ

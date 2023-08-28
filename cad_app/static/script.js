@@ -249,21 +249,43 @@ draw();
 // **************************************************************
 // 以下、イベントリスナー
 
+// 線の始点と終点を保存する変数を追加
+let startPoint = null;
+let endPoint = null;
+
 // マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
     // shapeの選択
     const shape = shapeSelect.value;
 
+    //// 共通のマウス位置取得処理
     // canvasの絶対位置を一度取得して変数に格納
     const rect = canvas.getBoundingClientRect();
-
     // canvas内での相対座標を計算
     const canvasX = event.clientX - rect.left;
     const canvasY = event.clientY - rect.top;
-
     // canvas座標をCAD座標に変換
     const cadCoordinates = camera.toCAD(canvasX, canvasY);
+    
+    if (shape === 'Point') {
+        // 点の描画
+        sendShapeToBackend(shape, cadCoordinates);
+    } else if (shape === 'Line') {
+        if (startPoint === null) {
+            // 始点を設定
+            startPoint = cadCoordinates;
+        } else {
+            // 終点を設定
+            endPoint = cadCoordinates;
 
+            // ここでバックエンドに線の始点と終点を送信
+            sendShapeToBackend(shape, {start: startPoint, end: endPoint});
+
+            // 始点と終点をリセット
+            startPoint = null;
+            endPoint = null;
+        }
+    }
     // ここでバックエンドに送信
     sendShapeToBackend(shape, cadCoordinates);
 
