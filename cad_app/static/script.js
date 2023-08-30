@@ -64,23 +64,19 @@ class Camera {
   }
 }
 
+// =================================================================================
 
 // 再描画関数
 function draw() {
+  console.log("I'm in draw().");
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // グリッド線の描画
   drawGrid(ctx);
 
-  // 描画関数内で変換
-  const canvasPoint = camera.toCanvas(cadPoint.x, cadPoint.y);
-
-  // 描画
-  ctx.beginPath();
-  ctx.arc(canvasPoint.x, canvasPoint.y, 5, 0, 2 * Math.PI);
-  ctx.fill();
-
-  drawShapesFromCache(); // キャッシュから描画（ちらつき防止）
+  // キャッシュから描画（ちらつき防止）
+  drawShapesFromCache();
 
   // バックエンドから全て図形情報を取得し、描画
   getShapesFromBackend();
@@ -92,6 +88,8 @@ function draw() {
 
 
 function drawGrid(ctx) {
+  console.log("I'm in drawGrid().");
+
   // グリッド線の間隔（CAD座標系上の100mm）
   const gridSpacing = 100;
 
@@ -112,6 +110,8 @@ function drawGrid(ctx) {
 
 
 function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
+  console.log("I'm in drawGridLines()");
+
   // X方向のグリッド線
   for (let x = Math.floor(leftTopCAD.x / gridSpacing) * gridSpacing; x <= rightBottomCAD.x; x += gridSpacing) {
     const start = camera.toCanvas(x, leftTopCAD.y);
@@ -136,6 +136,7 @@ function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
 
 
 function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
+  console.log("I'm in drawAxisLine()");
   const start = isXAxis ? camera.toCanvas(value, leftTopCAD.y) : camera.toCanvas(leftTopCAD.x, value);
   const end = isXAxis ? camera.toCanvas(value, rightBottomCAD.y) : camera.toCanvas(rightBottomCAD.x, value);
   ctx.beginPath();
@@ -148,6 +149,7 @@ function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
 // Canvas要素の現在のスケールを表示する
 // Canvas要素の左上と右下がCAD座標系においてどこなのかをHTML上に表示する
 function displayCADCoordinates() {
+  console.log("I'm in displayCADCoordinates()");
   let canvas = document.getElementById('myCanvas');
 
   // Canvasの左上と右下の座標
@@ -173,7 +175,8 @@ function displayCADCoordinates() {
 
 
 function sendShapeToBackend(shape, cadCoordinates) {
-    // console.log("sendShapeToBackend");
+    console.log("I'm in sendShapeToBackend()");
+
     // Ajaxを使用してバックエンドにPOSTリクエストを送信
     fetch('/add_shape', {
         method: 'POST',
@@ -186,25 +189,41 @@ function sendShapeToBackend(shape, cadCoordinates) {
 
 
 function getShapesFromBackend() {
-  // console.log("getShapesFromBackend");
+  console.log("I'm in getShapesFromBackend()");
+  //console.trace();
+
   fetch('/get_shapes')
     .then(response => response.json())
     .then(data => {
-      shapesCache = data.shapes; // ローカルキャッシュに保存
+      shapesCache = data; // ローカルキャッシュに保存
+      console.log(shapesCache);
       drawShapesFromCache(); // キャッシュから描画
     });
 }
 
 
 function drawShapesFromCache() {
+  console.log("I'm in drawShapesFromCache()");
+  console.trace();
+  console.log(shapesCache);
+
   shapesCache.forEach(shape => {
-    const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
     if (shape.type === 'Point') {
+      // 点を描画
+      const canvasCoordinates = camera.toCanvas(shape.x, shape.y);
       ctx.beginPath();
       ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
       ctx.fill();
+    } else if (shape.type === 'Line') {
+      // 線を描画
+      const startCanvasCoordinates = camera.toCanvas(shape.start.x, shape.start.y);
+      const endCanvasCoordinates = camera.toCanvas(shape.end.x, shape.end.y);
+      ctx.beginPath();
+      ctx.moveTo(startCanvasCoordinates.x, startCanvasCoordinates.y);
+      ctx.lineTo(endCanvasCoordinates.x, endCanvasCoordinates.y);
+      ctx.stroke();
     }
-    // 他の図形の描画もここに追加
+    // 他の図形の描画もここに追加できます
   });
 }
 
@@ -218,6 +237,8 @@ function drawShapesFromCache() {
 // 基準解像度に、dprを掛け合わせることで、「１インチあたりの物理ピクセル数」を計算できる
 // 例えば、高解像度デバイスを使っていてdpr=1.25の場合、1インチあたり120(=96*125)物理ピクセルになる
 // var dpi = dpr * 96;
+
+console.log("script.js was started.#1");
 
 // 「1ミリ当たりの物理ピクセル数」の計算
 var dpi = 100;
@@ -235,9 +256,6 @@ const shapeSelect = document.getElementById('shapeSelect');
 // Camera
 const camera = new Camera(conversionRate);
 
-// CAD座標系の点を例として
-const cadPoint = { x: 30, y: 20 };
-
 // バックエンドから取得した図形情報のローカルキャッシュ
 let shapesCache = [];
 
@@ -245,7 +263,7 @@ let shapesCache = [];
 const mouseCoordinatesCanvasDiv = document.getElementById('mouse-coordinates-canvas');
 const mouseCoordinatesCadDiv = document.getElementById('mouse-coordinates-cad');
 
-
+console.log("script.js was started.#2");
 draw();
 
 // **************************************************************

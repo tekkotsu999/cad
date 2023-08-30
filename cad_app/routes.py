@@ -4,11 +4,16 @@ from . import app  # __init__.pyからFlaskアプリケーションインスタ�
 from flask import jsonify, request
 # from .src.optimize import run_optimization
 
+from .src.shapes import ShapeManager
+from .src.points import Point
+from .src.lines import Line
+
+# ---------------------------------------------------------------
 @app.route('/')
 def home():
     return render_template('index.html')
 
-
+# ---------------------------------------------------------------
 @app.route('/optimize', methods=['POST'])
 def optimize():
     data = request.get_json()
@@ -19,8 +24,8 @@ def optimize():
     # 結果をJSON形式で返す
     return jsonify(result)
 
+# ---------------------------------------------------------------
 
-from .src.shapes import ShapeManager
 shape_manager = ShapeManager()
 
 @app.route('/add_shape', methods=['POST'])
@@ -38,18 +43,23 @@ def add_shape():
     }
     return jsonify(response_data)
 
-
+# ---------------------------------------------------------------
 # 全ての図形を取得するためのルート
 @app.route('/get_shapes', methods=['GET'])
 def get_shapes():
     shapes_data = []
-    for shape in shape_manager.get_shapes():
-        shape_data = {
-            'type': type(shape).__name__,
-            'coordinates': {'x': shape.x, 'y': shape.y}  # 例: Pointクラスの場合
-        }
-        shapes_data.append(shape_data)
-
-    # print(shapes_data)
-
-    return jsonify({'shapes': shapes_data})
+    for shape in shape_manager.shapes:
+        if isinstance(shape, Point):
+            shapes_data.append({
+                'type': 'Point',
+                'x': shape.x,
+                'y': shape.y
+            })
+        elif isinstance(shape, Line):
+            shapes_data.append({
+                'type': 'Line',
+                'start': {'x': shape.start.x, 'y': shape.start.y},
+                'end': {'x': shape.end.x, 'y': shape.end.y}
+            })
+    print("Shapes data:", shapes_data)
+    return jsonify(shapes_data)
