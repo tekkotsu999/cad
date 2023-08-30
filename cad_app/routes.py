@@ -58,8 +58,8 @@ def get_shapes():
         elif isinstance(shape, Line):
             shapes_data.append({
                 'type': 'Line',
-                'start': {'x': shape.start.x, 'y': shape.start.y},
-                'end': {'x': shape.end.x, 'y': shape.end.y}
+                'p1': {'x': shape.p1.x, 'y': shape.p1.y},
+                'p2': {'x': shape.p2.x, 'y': shape.p2.y}
             })
     print("Shapes data:", shapes_data)
     return jsonify(shapes_data)

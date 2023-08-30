@@ -216,11 +216,11 @@ function drawShapesFromCache() {
       ctx.fill();
     } else if (shape.type === 'Line') {
       // 線を描画
-      const startCanvasCoordinates = camera.toCanvas(shape.start.x, shape.start.y);
-      const endCanvasCoordinates = camera.toCanvas(shape.end.x, shape.end.y);
+      const p1CanvasCoordinates = camera.toCanvas(shape.p1.x, shape.p1.y);
+      const p2CanvasCoordinates = camera.toCanvas(shape.p2.x, shape.p2.y);
       ctx.beginPath();
-      ctx.moveTo(startCanvasCoordinates.x, startCanvasCoordinates.y);
-      ctx.lineTo(endCanvasCoordinates.x, endCanvasCoordinates.y);
+      ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
+      ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
       ctx.stroke();
     }
     // 他の図形の描画もここに追加できます
@@ -270,8 +270,8 @@ draw();
 // 以下、イベントリスナー
 
 // 線の始点と終点を保存する変数を追加
-let startPoint = null;
-let endPoint = null;
+let p1Point = null;
+let p2Point = null;
 
 // マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
@@ -291,23 +291,23 @@ canvas.addEventListener('click', (event) => {
         // 点の描画
         sendShapeToBackend(shape, cadCoordinates);
     } else if (shape === 'Line') {
-        if (startPoint === null) {
+        if (p1Point === null) {
             // 始点を設定
-            startPoint = cadCoordinates;
+            p1Point = cadCoordinates;
         } else {
             // 終点を設定
-            endPoint = cadCoordinates;
+            p2Point = cadCoordinates;
 
             // ここでバックエンドに線の始点と終点を送信
-            sendShapeToBackend(shape, {start: startPoint, end: endPoint});
+            sendShapeToBackend(shape, {p1: p1Point, p2: p2Point});
 
             // 始点と終点をリセット
-            startPoint = null;
-            endPoint = null;
+            p1Point = null;
+            p2Point = null;
         }
     }
     // ここでバックエンドに送信
-    sendShapeToBackend(shape, cadCoordinates);
+    //sendShapeToBackend(shape, cadCoordinates);
 
     // 描画
     draw();
