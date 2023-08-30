@@ -4,7 +4,7 @@ class Camera {
     this.position = { x: 0, y: 0 }; // カメラの位置（CAD座標系）
     this.scale = 1; // スケール
     this.conversionRate = conversionRate; // mmからpxへの変換率
-    console.log("conversionRate = ", conversionRate);
+    // console.log("conversionRate = ", conversionRate);
   }
 
   // CAD座標系からCanvas座標系への変換行列
@@ -242,7 +242,9 @@ const cadPoint = { x: 30, y: 20 };
 let shapesCache = [];
 
 // マウス座標を表示するためのdivを取得
-const mouseCoordinatesDiv = document.getElementById('mouse-coordinates');
+const mouseCoordinatesCanvasDiv = document.getElementById('mouse-coordinates-canvas');
+const mouseCoordinatesCadDiv = document.getElementById('mouse-coordinates-cad');
+
 
 draw();
 
@@ -337,9 +339,14 @@ canvas.addEventListener('mousemove', (event) => {
   // canvas内での相対座標を計算
   const canvasX = event.clientX - rect.left;
   const canvasY = event.clientY - rect.top;
+
+  // CAD座標上での座標を計算
+  const cadCoordinates = camera.toCAD(canvasX, canvasY);
   
   // 座標をHTMLに出力
-  mouseCoordinatesDiv.innerHTML = `Canvas X: ${canvasX}, Canvas Y: ${canvasY}`;
+  mouseCoordinatesCanvasDiv.innerHTML = `Canvas X: ${canvasX}, Canvas Y: ${canvasY}`;
+  mouseCoordinatesCadDiv.innerHTML = `Cad X: ${cadCoordinates.x.toFixed(3)}, Cad Y: ${cadCoordinates.y.toFixed(3)}`;
+
 
   if (isDragging) {
     // Canvas座標系上でのマウスの移動量
