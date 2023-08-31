@@ -6,6 +6,10 @@ from flask import jsonify, request
 
 from .src.shapes import ShapeManager,Point,Line
 
+
+shape_manager = ShapeManager()
+
+
 # ---------------------------------------------------------------
 @app.route('/')
 def home():
@@ -23,9 +27,6 @@ def optimize():
     return jsonify(result)
 
 # ---------------------------------------------------------------
-
-shape_manager = ShapeManager()
-
 @app.route('/add_shape', methods=['POST'])
 def add_shape():
     data = request.json

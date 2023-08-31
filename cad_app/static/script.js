@@ -286,10 +286,20 @@ draw();
 // **************************************************************
 // 以下、イベントリスナー
 
-// 線の始点と終点を保存する変数を追加
+// 線の始点と終点を保存する変数
 let p1Point = null;
 let p2Point = null;
 
+// 線を描画中かどうかを示すフラグ
+let isDrawingLine = false;
+
+// 右クリックのドラッグしているかどうかを示すフラグ
+let isDragging = false;
+
+// 画面移動時の、マウス位置を格納する変数
+let lastMousePosition = null;
+
+// ------------------------------------------------------------------------
 // マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
     // shapeの選択
@@ -311,6 +321,7 @@ canvas.addEventListener('click', (event) => {
         if (p1Point === null) {
             // 始点を設定
             p1Point = cadCoordinates;
+            isDrawingLine = true;  // 線の描画を開始
         } else {
             // 終点を設定
             p2Point = cadCoordinates;
@@ -321,6 +332,9 @@ canvas.addEventListener('click', (event) => {
             // 始点と終点をリセット
             p1Point = null;
             p2Point = null;
+
+            // 線の描画を終了
+            isDrawingLine = false;
         }
     }
 
@@ -328,7 +342,7 @@ canvas.addEventListener('click', (event) => {
     draw();
 });
 
-
+// ------------------------------------------------------------------------
 // ズームイン、ズームアウト
 canvas.addEventListener('wheel', (event) => {
 
@@ -349,11 +363,7 @@ canvas.addEventListener('wheel', (event) => {
 
 }, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
-
-let isDragging = false;
-let lastMousePosition = null;
-
-
+// ------------------------------------------------------------------------
 // 右クリックでのドラッグ開始
 canvas.addEventListener('mousedown', (event) => {
   if (event.button === 2) { // 右クリック
@@ -365,20 +375,20 @@ canvas.addEventListener('mousedown', (event) => {
   }
 });
 
-
+// ------------------------------------------------------------------------
 // ドラッグ中のマウス移動
 canvas.addEventListener('mousemove', (event) => {
   // canvasの絶対位置を取得
   const rect = canvas.getBoundingClientRect();
 
-  // canvas内での相対座標を計算
+  // canvas内でのマウスの相対座標を計算
   const canvasX = event.clientX - rect.left;
   const canvasY = event.clientY - rect.top;
 
-  // CAD座標上での座標を計算
+  // CAD座標上でのマウス座標を計算
   const cadCoordinates = camera.toCAD(canvasX, canvasY);
   
-  // 座標をHTMLに出力
+  // マウス座標をHTMLに出力（Canvas座標とCAD座標それぞれ）
   mouseCoordinatesCanvasDiv.innerHTML = `Canvas X: ${canvasX}, Canvas Y: ${canvasY}`;
   mouseCoordinatesCadDiv.innerHTML = `Cad X: ${cadCoordinates.x.toFixed(3)}, Cad Y: ${cadCoordinates.y.toFixed(3)}`;
 
@@ -400,8 +410,27 @@ canvas.addEventListener('mousemove', (event) => {
     // 再描画
     draw_without_getShapesFromBackend();
   }
+
+  // 線を描画中かどうかを判定
+  if (isDrawingLine && p1Point !== null) {
+    // 一旦キャンバスをクリア
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // 既存図形やグリッド線の描画
+    draw_without_getShapesFromBackend()
+
+    // 始点から現在のマウス位置までの線を描画
+    const p1CanvasCoordinates = camera.toCanvas(p1Point.x, p1Point.y);
+    const p2CanvasCoordinates = camera.toCanvas(cadCoordinates.x, cadCoordinates.y);
+    ctx.beginPath();
+    ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
+    ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
+    ctx.stroke();
+  }
+
 });
 
+// ------------------------------------------------------------------------
 // ドラッグ終了
 canvas.addEventListener('mouseup', (event) => {
   if (event.button === 2) { // 右クリック
@@ -409,10 +438,12 @@ canvas.addEventListener('mouseup', (event) => {
   }
 });
 
+// ------------------------------------------------------------------------
 // 右クリックメニューの無効化
 canvas.addEventListener('contextmenu', (event) => {
   event.preventDefault();
 });
+
 
 // **************************************************************
 
