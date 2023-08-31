@@ -31,12 +31,13 @@ shape_manager = ShapeManager()
 @app.route('/add_shape', methods=['POST'])
 def add_shape():
     data = request.json
-    shape_type = data['shape']
+    shape_type = data['shape_type']
     coordinates = data['coordinates']
 
     shape_manager.add_shape(shape_type, coordinates)
 
     # フロントエンドに送り返すデータ
+    # ※このデータはフロントエンドでは使用していない（今のところ）
     response_data = {
         'shape': shape_type,
         'coordinates': coordinates
@@ -51,15 +52,15 @@ def get_shapes():
     for shape in shape_manager.shapes:
         if isinstance(shape, Point):
             shapes_data.append({
-                'type': 'Point',
-                'x': shape.x,
-                'y': shape.y
+                'shape_type': 'Point',
+                'coordinates' : { 'x': shape.x, 'y': shape.y}
             })
         elif isinstance(shape, Line):
             shapes_data.append({
-                'type': 'Line',
-                'p1': {'x': shape.p1.x, 'y': shape.p1.y},
-                'p2': {'x': shape.p2.x, 'y': shape.p2.y}
+                'shape_type': 'Line',
+                'coordinates': {
+                    'p1': {'x': shape.p1.x, 'y': shape.p1.y},
+                    'p2': {'x': shape.p2.x, 'y': shape.p2.y}}
             })
-    print("Shapes data:", shapes_data)
+    # print("Shapes data:", shapes_data)
     return jsonify(shapes_data)

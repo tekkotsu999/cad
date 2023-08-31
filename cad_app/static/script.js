@@ -68,7 +68,7 @@ class Camera {
 
 // 再描画関数
 function draw() {
-  console.log("I'm in draw().");
+  //console.log("I'm in draw().");
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -86,9 +86,26 @@ function draw() {
 
 }
 
+// 再描画関数（バックエンドからデータの取得なし）
+function draw_without_getShapesFromBackend() {
+  //console.log("I'm in draw().");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // グリッド線の描画
+  drawGrid(ctx);
+
+  // キャッシュから描画（ちらつき防止）
+  drawShapesFromCache();
+
+  // CAD座標系の表示
+  displayCADCoordinates();
+
+}
+
 
 function drawGrid(ctx) {
-  console.log("I'm in drawGrid().");
+  //console.log("I'm in drawGrid().");
 
   // グリッド線の間隔（CAD座標系上の100mm）
   const gridSpacing = 100;
@@ -110,7 +127,7 @@ function drawGrid(ctx) {
 
 
 function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
-  console.log("I'm in drawGridLines()");
+  //console.log("I'm in drawGridLines()");
 
   // X方向のグリッド線
   for (let x = Math.floor(leftTopCAD.x / gridSpacing) * gridSpacing; x <= rightBottomCAD.x; x += gridSpacing) {
@@ -136,7 +153,7 @@ function drawGridLines(ctx, leftTopCAD, rightBottomCAD, gridSpacing) {
 
 
 function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
-  console.log("I'm in drawAxisLine()");
+  //console.log("I'm in drawAxisLine()");
   const start = isXAxis ? camera.toCanvas(value, leftTopCAD.y) : camera.toCanvas(leftTopCAD.x, value);
   const end = isXAxis ? camera.toCanvas(value, rightBottomCAD.y) : camera.toCanvas(rightBottomCAD.x, value);
   ctx.beginPath();
@@ -149,7 +166,7 @@ function drawAxisLine(ctx, leftTopCAD, rightBottomCAD, value, isXAxis) {
 // Canvas要素の現在のスケールを表示する
 // Canvas要素の左上と右下がCAD座標系においてどこなのかをHTML上に表示する
 function displayCADCoordinates() {
-  console.log("I'm in displayCADCoordinates()");
+  //console.log("I'm in displayCADCoordinates()");
   let canvas = document.getElementById('myCanvas');
 
   // Canvasの左上と右下の座標
@@ -174,8 +191,8 @@ function displayCADCoordinates() {
 }
 
 
-function sendShapeToBackend(shape, cadCoordinates) {
-    console.log("I'm in sendShapeToBackend()");
+function sendShapeToBackend(shape_type, cadCoordinates) {
+    //console.log("I'm in sendShapeToBackend()");
 
     // Ajaxを使用してバックエンドにPOSTリクエストを送信
     fetch('/add_shape', {
@@ -183,13 +200,13 @@ function sendShapeToBackend(shape, cadCoordinates) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ shape: shape, coordinates: cadCoordinates }),
+        body: JSON.stringify({ shape_type: shape_type, coordinates: cadCoordinates }),
     });
 }
 
 
 function getShapesFromBackend() {
-  console.log("I'm in getShapesFromBackend()");
+  //console.log("I'm in getShapesFromBackend()");
   //console.trace();
 
   fetch('/get_shapes')
@@ -203,21 +220,21 @@ function getShapesFromBackend() {
 
 
 function drawShapesFromCache() {
-  console.log("I'm in drawShapesFromCache()");
-  console.trace();
-  console.log(shapesCache);
+  //console.log("I'm in drawShapesFromCache()");
+  //console.trace();
+  //console.log(shapesCache);
 
   shapesCache.forEach(shape => {
-    if (shape.type === 'Point') {
+    if (shape.shape_type === 'Point') {
       // 点を描画
-      const canvasCoordinates = camera.toCanvas(shape.x, shape.y);
+      const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
       ctx.beginPath();
       ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
       ctx.fill();
-    } else if (shape.type === 'Line') {
+    } else if (shape.shape_type === 'Line') {
       // 線を描画
-      const p1CanvasCoordinates = camera.toCanvas(shape.p1.x, shape.p1.y);
-      const p2CanvasCoordinates = camera.toCanvas(shape.p2.x, shape.p2.y);
+      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.x, shape.coordinates.p1.y);
+      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.x, shape.coordinates.p2.y);
       ctx.beginPath();
       ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
       ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
@@ -238,7 +255,7 @@ function drawShapesFromCache() {
 // 例えば、高解像度デバイスを使っていてdpr=1.25の場合、1インチあたり120(=96*125)物理ピクセルになる
 // var dpi = dpr * 96;
 
-console.log("script.js was started.#1");
+//console.log("script.js was started.#1");
 
 // 「1ミリ当たりの物理ピクセル数」の計算
 var dpi = 100;
@@ -263,7 +280,7 @@ let shapesCache = [];
 const mouseCoordinatesCanvasDiv = document.getElementById('mouse-coordinates-canvas');
 const mouseCoordinatesCadDiv = document.getElementById('mouse-coordinates-cad');
 
-console.log("script.js was started.#2");
+//console.log("script.js was started.#2");
 draw();
 
 // **************************************************************
@@ -276,7 +293,7 @@ let p2Point = null;
 // マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
     // shapeの選択
-    const shape = shapeSelect.value;
+    const shape_type = shapeSelect.value;
 
     //// 共通のマウス位置取得処理
     // canvasの絶対位置を一度取得して変数に格納
@@ -287,10 +304,10 @@ canvas.addEventListener('click', (event) => {
     // canvas座標をCAD座標に変換
     const cadCoordinates = camera.toCAD(canvasX, canvasY);
     
-    if (shape === 'Point') {
+    if (shape_type === 'Point') {
         // 点の描画
-        sendShapeToBackend(shape, cadCoordinates);
-    } else if (shape === 'Line') {
+        sendShapeToBackend(shape_type, cadCoordinates);
+    } else if (shape_type === 'Line') {
         if (p1Point === null) {
             // 始点を設定
             p1Point = cadCoordinates;
@@ -299,15 +316,13 @@ canvas.addEventListener('click', (event) => {
             p2Point = cadCoordinates;
 
             // ここでバックエンドに線の始点と終点を送信
-            sendShapeToBackend(shape, {p1: p1Point, p2: p2Point});
+            sendShapeToBackend(shape_type, {p1: p1Point, p2: p2Point});
 
             // 始点と終点をリセット
             p1Point = null;
             p2Point = null;
         }
     }
-    // ここでバックエンドに送信
-    //sendShapeToBackend(shape, cadCoordinates);
 
     // 描画
     draw();
@@ -329,7 +344,9 @@ canvas.addEventListener('wheel', (event) => {
   } else {
     camera.zoomIn(1.1, mouseX, mouseY);
   }
-  draw(); // 再描画
+
+  draw_without_getShapesFromBackend();  // 再描画
+
 }, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
 
@@ -381,7 +398,7 @@ canvas.addEventListener('mousemove', (event) => {
     lastMousePosition = { x: canvasX, y: canvasY };
 
     // 再描画
-    draw();
+    draw_without_getShapesFromBackend();
   }
 });
 
