@@ -4,9 +4,7 @@ from . import app  # __init__.pyからFlaskアプリケーションインスタ�
 from flask import jsonify, request
 # from .src.optimize import run_optimization
 
-from .src.shapes import ShapeManager
-from .src.points import Point
-from .src.lines import Line
+from .src.shapes import ShapeManager,Point,Line
 
 # ---------------------------------------------------------------
 @app.route('/')
