@@ -1,0 +1,9 @@
+.mode-button {
+  transition: all 0.1s ease;
+}
+
+.mode-button.active {
+  /* ここで沈み込んでいるようなスタイルを適用 */
+  background-color: #DDD;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+}

@@ -65,6 +65,22 @@ class Camera {
 }
 
 // =================================================================================
+// 状態（モード）を管理するクラス
+class ModeManager {
+  constructor() {
+    this.currentMode = 'select_mode';  // 初期モードは選択モード
+  }
+
+  setMode(newMode) {
+    this.currentMode = newMode;
+  }
+
+  getMode() {
+    return this.currentMode;
+  }
+}
+
+// =================================================================================
 
 // 再描画関数
 function draw() {
@@ -244,6 +260,19 @@ function drawShapesFromCache() {
   });
 }
 
+function changeMode(newMode) {
+  modeManager.setMode(newMode);
+
+  // 既にアクティブなボタンがあれば、そのスタイルを元に戻す
+  if (activeButton) {
+    activeButton.classList.remove('active');
+  }
+
+  // 新しく選択されたモードのボタンをアクティブにする
+  activeButton = document.getElementById(`${newMode}_Button`);
+  activeButton.classList.add('active');
+}
+
 // **************************************************************
 
 // DPIから変換率を計算
@@ -257,6 +286,9 @@ function drawShapesFromCache() {
 
 //console.log("script.js was started.#1");
 
+// 現在アクティブなボタンを保持
+let activeButton = null;  
+
 // 「1ミリ当たりの物理ピクセル数」の計算
 var dpi = 100;
 var conversionRate = dpi / 25.4;
@@ -267,11 +299,11 @@ let canvas = document.getElementById('myCanvas');
 // コンテキストのスケールを調整
 var ctx = canvas.getContext('2d');
 
-// 描画する図形の種類の取得
-const shapeSelect = document.getElementById('shapeSelect');
-
 // Camera
 const camera = new Camera(conversionRate);
+
+// ModeManager
+const modeManager = new ModeManager();
 
 // バックエンドから取得した図形情報のローカルキャッシュ
 let shapesCache = [];
@@ -300,12 +332,11 @@ let isDragging = false;
 let lastMousePosition = null;
 
 // ------------------------------------------------------------------------
+// click
 // マウス左クリックイベントのリスナー
 canvas.addEventListener('click', (event) => {
-    // shapeの選択
-    const shape_type = shapeSelect.value;
 
-    //// 共通のマウス位置取得処理
+    //// 共通の処理：マウス位置取得処理
     // canvasの絶対位置を一度取得して変数に格納
     const rect = canvas.getBoundingClientRect();
     // canvas内での相対座標を計算
@@ -314,10 +345,18 @@ canvas.addEventListener('click', (event) => {
     // canvas座標をCAD座標に変換
     const cadCoordinates = camera.toCAD(canvasX, canvasY);
     
-    if (shape_type === 'Point') {
-        // 点の描画
-        sendShapeToBackend(shape_type, cadCoordinates);
-    } else if (shape_type === 'Line') {
+    // 現在のモードを取得
+    const currentMode = modeManager.getMode();
+
+    if (currentMode === 'point_mode') {
+        // 点を描画する処理
+        sendShapeToBackend('Point', cadCoordinates);
+        
+        // 描画
+        draw();
+        
+    } else if (currentMode === 'line_mode') {
+        // 線を描画する処理
         if (p1Point === null) {
             // 始点を設定
             p1Point = cadCoordinates;
@@ -325,26 +364,60 @@ canvas.addEventListener('click', (event) => {
         } else {
             // 終点を設定
             p2Point = cadCoordinates;
-
+            
+            console.log("p1:",p1Point);
+            console.log("p2:",p2Point);
+            
             // ここでバックエンドに線の始点と終点を送信
-            sendShapeToBackend(shape_type, {p1: p1Point, p2: p2Point});
-
+            sendShapeToBackend('Line', {p1: p1Point, p2: p2Point});
+            
             // 始点と終点をリセット
             p1Point = null;
             p2Point = null;
-
+            
             // 線の描画を終了
             isDrawingLine = false;
+            
+            // 描画
+            draw();
         }
+    } else if (currentMode === 'select_mode') {
+        // 図形を選択する処理
     }
-
-    // 描画
-    draw();
+    
+    
+//    if (shape_type === 'Point') {
+//        // 点の描画
+//        sendShapeToBackend(shape_type, cadCoordinates);
+//    } else if (shape_type === 'Line') {
+//        if (p1Point === null) {
+//            // 始点を設定
+//            p1Point = cadCoordinates;
+//            isDrawingLine = true;  // 線の描画を開始
+//        } else {
+//            // 終点を設定
+//            p2Point = cadCoordinates;
+//
+//            // ここでバックエンドに線の始点と終点を送信
+//            sendShapeToBackend(shape_type, {p1: p1Point, p2: p2Point});
+//
+//            // 始点と終点をリセット
+//            p1Point = null;
+//            p2Point = null;
+//
+//            // 線の描画を終了
+//            isDrawingLine = false;
+//        }
+//    }
+//    // 描画
+//    draw();
 });
 
 // ------------------------------------------------------------------------
+// wheel
 // ズームイン、ズームアウト
 canvas.addEventListener('wheel', (event) => {
+  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
 
   // イベントのデフォルト動作（スクロール）を無効化
   event.preventDefault();
@@ -364,8 +437,11 @@ canvas.addEventListener('wheel', (event) => {
 }, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
 // ------------------------------------------------------------------------
-// 右クリックでのドラッグ開始
+// mousedown
+// 画面の並行移動時に、右クリックでのドラッグ開始
 canvas.addEventListener('mousedown', (event) => {
+  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
+
   if (event.button === 2) { // 右クリック
     isDragging = true;
 
@@ -376,7 +452,8 @@ canvas.addEventListener('mousedown', (event) => {
 });
 
 // ------------------------------------------------------------------------
-// ドラッグ中のマウス移動
+// mousemove
+// 画面の平行移動時と、線の描画時
 canvas.addEventListener('mousemove', (event) => {
   // canvasの絶対位置を取得
   const rect = canvas.getBoundingClientRect();
@@ -392,7 +469,11 @@ canvas.addEventListener('mousemove', (event) => {
   mouseCoordinatesCanvasDiv.innerHTML = `Canvas X: ${canvasX}, Canvas Y: ${canvasY}`;
   mouseCoordinatesCadDiv.innerHTML = `Cad X: ${cadCoordinates.x.toFixed(3)}, Cad Y: ${cadCoordinates.y.toFixed(3)}`;
 
+  // 現在のモードを取得
+  const currentMode = modeManager.getMode();
 
+  // 右クリックでドラッグしているとき
+  // mode依存なし
   if (isDragging) {
     // Canvas座標系上でのマウスの移動量
     const dxCanvas = canvasX - lastMousePosition.x;
@@ -411,8 +492,10 @@ canvas.addEventListener('mousemove', (event) => {
     draw_without_getShapesFromBackend();
   }
 
+
   // 線を描画中かどうかを判定
-  if (isDrawingLine && p1Point !== null) {
+  // Line modeのみで有効
+  if (currentMode === 'line_mode' && isDrawingLine && p1Point !== null) {
     // 一旦キャンバスをクリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -428,19 +511,28 @@ canvas.addEventListener('mousemove', (event) => {
     ctx.stroke();
   }
 
+  // 他のモードでのmousemove処理をこちらに追加
+  // 例: if (currentMode === 'select') { /* 選択モードでの処理 */ }
+
 });
 
 // ------------------------------------------------------------------------
+// mouseup
 // ドラッグ終了
 canvas.addEventListener('mouseup', (event) => {
+  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
+
   if (event.button === 2) { // 右クリック
     isDragging = false;
   }
 });
 
 // ------------------------------------------------------------------------
+// contextmenu
 // 右クリックメニューの無効化
 canvas.addEventListener('contextmenu', (event) => {
+  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
+
   event.preventDefault();
 });
 
