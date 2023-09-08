@@ -386,10 +386,14 @@ canvas.addEventListener('click', (event) => {
             draw();
         }
     } else if (currentMode === 'select_mode') {
-        // マウスでクリックした座標をバックエンドに送信
+        // 画面上での許容値（5pt）をCAD座標系に変換
+        // この変換にはcamera.scaleとcamera.conversionRateを使用
+        const toleranceInCAD = 5 / (camera.scale * camera.conversionRate);
+
+        // マウスでクリックした座標と許容値をバックエンドに送信
         fetch('/select_point', {
             method: 'POST',
-            body: JSON.stringify(cadCoordinates),
+            body: JSON.stringify({ coordinates: cadCoordinates, tolerance: toleranceInCAD }),
             headers: { 'Content-Type': 'application/json' }
         }).then(response => response.json())
         .then(data => {

@@ -71,13 +71,15 @@ def get_shapes():
 @app.route('/select_point', methods=['POST'])
 def select_point():
     data = request.json
-    click_x = data['x']
-    click_y = data['y']
-    
+    click_x = data['coordinates']['x']  # 座標のx値
+    click_y = data['coordinates']['y']  # 座標のy値
+    tolerance = data['tolerance']  # 許容値
+
     for point in shape_manager.get_shapes():
         if isinstance(point, Point):
+            # 2点間の距離を計算
             distance = math.sqrt((point.x - click_x)**2 + (point.y - click_y)**2)
-            if distance <= 5:  # 半径5px以内
+            if distance <= tolerance:  # 許容値以内
                 point.is_selected = True
                 return jsonify({'status': 'success', 'selected_point': point.__dict__})
     
