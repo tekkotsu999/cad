@@ -1,5 +1,6 @@
 from flask import render_template
 from . import app  # __init__.pyからFlaskアプリケーションインスタンスをインポート
+import math
 
 from flask import jsonify, request
 # from .src.optimize import run_optimization
@@ -52,14 +53,33 @@ def get_shapes():
         if isinstance(shape, Point):
             shapes_data.append({
                 'shape_type': 'Point',
-                'coordinates' : { 'x': shape.x, 'y': shape.y}
+                'coordinates' : { 'x': shape.x, 'y': shape.y},
+                'is_selected' : shape.is_selected
             })
         elif isinstance(shape, Line):
             shapes_data.append({
                 'shape_type': 'Line',
                 'coordinates': {
                     'p1': {'x': shape.p1.x, 'y': shape.p1.y},
-                    'p2': {'x': shape.p2.x, 'y': shape.p2.y}}
+                    'p2': {'x': shape.p2.x, 'y': shape.p2.y}},
+                'is_selected' : shape.is_selected
             })
     # print("Shapes data:", shapes_data)
     return jsonify(shapes_data)
+
+# ---------------------------------------------------------------
+@app.route('/select_point', methods=['POST'])
+def select_point():
+    data = request.json
+    click_x = data['x']
+    click_y = data['y']
+    
+    for point in shape_manager.get_shapes():
+        if isinstance(point, Point):
+            distance = math.sqrt((point.x - click_x)**2 + (point.y - click_y)**2)
+            if distance <= 5:  # 半径5px以内
+                point.is_selected = True
+                return jsonify({'status': 'success', 'selected_point': point.__dict__})
+    
+    return jsonify({'status': 'no_point_selected'})
+

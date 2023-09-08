@@ -229,7 +229,7 @@ function getShapesFromBackend() {
     .then(response => response.json())
     .then(data => {
       shapesCache = data; // ローカルキャッシュに保存
-      console.log(shapesCache);
+      console.log('shapesCache:', shapesCache);
       drawShapesFromCache(); // キャッシュから描画
     });
 }
@@ -241,6 +241,10 @@ function drawShapesFromCache() {
   //console.log(shapesCache);
 
   shapesCache.forEach(shape => {
+    // 描画色を設定（選択されている場合は水色、それ以外は黒）
+    ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
+    ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
+
     if (shape.shape_type === 'Point') {
       // 点を描画
       const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
@@ -382,35 +386,20 @@ canvas.addEventListener('click', (event) => {
             draw();
         }
     } else if (currentMode === 'select_mode') {
-        // 図形を選択する処理
+        // マウスでクリックした座標をバックエンドに送信
+        fetch('/select_point', {
+            method: 'POST',
+            body: JSON.stringify(cadCoordinates),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 点を水色でハイライト（描画関数内で処理）
+                console.log("select point:", data);
+                draw();
+            }
+        });
     }
-    
-    
-//    if (shape_type === 'Point') {
-//        // 点の描画
-//        sendShapeToBackend(shape_type, cadCoordinates);
-//    } else if (shape_type === 'Line') {
-//        if (p1Point === null) {
-//            // 始点を設定
-//            p1Point = cadCoordinates;
-//            isDrawingLine = true;  // 線の描画を開始
-//        } else {
-//            // 終点を設定
-//            p2Point = cadCoordinates;
-//
-//            // ここでバックエンドに線の始点と終点を送信
-//            sendShapeToBackend(shape_type, {p1: p1Point, p2: p2Point});
-//
-//            // 始点と終点をリセット
-//            p1Point = null;
-//            p2Point = null;
-//
-//            // 線の描画を終了
-//            isDrawingLine = false;
-//        }
-//    }
-//    // 描画
-//    draw();
 });
 
 // ------------------------------------------------------------------------

@@ -24,6 +24,7 @@ class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.is_selected = False
 
     def __repr__(self):
         return f"Point(x={self.x}, y={self.y})"
@@ -35,6 +36,7 @@ class Line:
     def __init__(self, p1, p2):
         self.p1 = p1
         self.p2 = p2
+        self.is_selected = False
         self.length = self.calculate_length()
 
     # Lineインスタンスの長さを計算するメソッド
