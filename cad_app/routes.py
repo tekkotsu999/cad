@@ -68,20 +68,77 @@ def get_shapes():
     return jsonify(shapes_data)
 
 # ---------------------------------------------------------------
-@app.route('/select_point', methods=['POST'])
-def select_point():
+@app.route('/select_shape', methods=['POST'])
+def select_shape():
     data = request.json
-    click_x = data['coordinates']['x']  # 座標のx値
-    click_y = data['coordinates']['y']  # 座標のy値
-    tolerance = data['tolerance']  # 許容値
+    click_x = data['coordinates']['x']
+    click_y = data['coordinates']['y']
+    tolerance = data['tolerance']
 
-    for point in shape_manager.get_shapes():
-        if isinstance(point, Point):
-            # 2点間の距離を計算
-            distance = math.sqrt((point.x - click_x)**2 + (point.y - click_y)**2)
-            if distance <= tolerance:  # 許容値以内
-                point.is_selected = True
-                return jsonify({'status': 'success', 'selected_point': point.__dict__})
+    # 点の選択
+    for shape in shape_manager.get_shapes():
+        if isinstance(shape, Point):
+            distance = math.sqrt((shape.x - click_x)**2 + (shape.y - click_y)**2)
+            if distance <= tolerance:
+
+                # 全てのshapeのis_selectedをリセット
+                for shape_tmp in shape_manager.get_shapes():
+                    shape_tmp.is_selected = False
+
+                shape.is_selected = True
+                return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+
+    # 線の選択（新規追加）
+    for shape in shape_manager.get_shapes():
+        if isinstance(shape, Line):
+            # 線とクリック位置との距離を計算（実装が必要）
+            distance = calculate_line_distance(shape, click_x, click_y)
+            if distance <= tolerance:
+
+                # 全てのshapeのis_selectedをリセット
+                for shape_tmp in shape_manager.get_shapes():
+                    shape_tmp.is_selected = False
+
+                shape.is_selected = True
+                return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+
+    return jsonify({'status': 'no_shape_selected'})
+
+# 線の方程式と点との距離を計算
+def calculate_line_distance(line, click_x, click_y):
+    # 線分の両端の点
+    x1, y1 = line.p1.x, line.p1.y
+    x2, y2 = line.p2.x, line.p2.y
     
-    return jsonify({'status': 'no_point_selected'})
+    # 線分のベクトル
+    dx = x2 - x1
+    dy = y2 - y1
+    
+    # 線分の長さの二乗
+    l2 = dx*dx + dy*dy
+    
+    # 線分が点である（長さが0）場合
+    if l2 == 0:
+        return math.sqrt((click_x - x1)**2 + (click_y - y1)**2)
+    
+    # 線分上で最もクリック位置に近い点を求める
+    t = ((click_x - x1) * dx + (click_y - y1) * dy) / l2
+    
+    # tを[0, 1]の範囲にクリッピング
+    t = max(0, min(1, t))
+    
+    # 最も近い点の座標
+    nearest_x = x1 + t * dx
+    nearest_y = y1 + t * dy
+    
+    # 最も近い点とクリック位置との距離
+    distance = math.sqrt((click_x - nearest_x)**2 + (click_y - nearest_y)**2)
+    
+    return distance
 
+# shape_to_dict関数の実装
+def shape_to_dict(shape):
+    if isinstance(shape, Point):
+        return {'type': 'Point', 'x': shape.x, 'y': shape.y, 'is_selected': shape.is_selected}
+    elif isinstance(shape, Line):
+        return {'type': 'Line', 'p1': shape.p1.__dict__, 'p2': shape.p2.__dict__, 'is_selected': shape.is_selected}

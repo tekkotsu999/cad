@@ -86,37 +86,69 @@ class ModeManager {
 function draw() {
   //console.log("I'm in draw().");
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // グリッド線の描画
-  drawGrid(ctx);
-
-  // キャッシュから描画（ちらつき防止）
-  drawShapesFromCache();
-
   // バックエンドから全て図形情報を取得し、描画
   getShapesFromBackend();
-
-  // CAD座標系の表示
-  displayCADCoordinates();
 
 }
 
 // 再描画関数（バックエンドからデータの取得なし）
 function draw_without_getShapesFromBackend() {
-  //console.log("I'm in draw().");
+  //console.log("I'm in draw_without_getShapesFromBackend().");
+
+  // キャッシュから描画（ちらつき防止）
+  drawShapesFromCache();
+
+}
+
+function getShapesFromBackend() {
+  //console.log("I'm in getShapesFromBackend()");
+  //console.trace();
+
+  fetch('/get_shapes')
+    .then(response => response.json())
+    .then(data => {
+      shapesCache = data; // ローカルキャッシュに保存
+      drawShapesFromCache(); // キャッシュから描画
+      console.log('shapesCache:', shapesCache);
+    });
+}
+
+function drawShapesFromCache() {
+  //console.log("I'm in drawShapesFromCache()");
+  //console.trace();
+  //console.log(shapesCache);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // グリッド線の描画
   drawGrid(ctx);
 
-  // キャッシュから描画（ちらつき防止）
-  drawShapesFromCache();
-
   // CAD座標系の表示
   displayCADCoordinates();
 
+  // shapesCacheに格納されているshapeを全て描画
+  shapesCache.forEach(shape => {
+    // 描画色を設定（選択されている場合は水色、それ以外は黒）
+    ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
+    ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
+
+    if (shape.shape_type === 'Point') {
+      // 点を描画
+      const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
+      ctx.beginPath();
+      ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    } else if (shape.shape_type === 'Line') {
+      // 線を描画
+      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.x, shape.coordinates.p1.y);
+      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.x, shape.coordinates.p2.y);
+      ctx.beginPath();
+      ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
+      ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
+      ctx.stroke();
+    }
+    // 他の図形の描画もここに追加できます
+  });
 }
 
 
@@ -221,49 +253,6 @@ function sendShapeToBackend(shape_type, cadCoordinates) {
 }
 
 
-function getShapesFromBackend() {
-  //console.log("I'm in getShapesFromBackend()");
-  //console.trace();
-
-  fetch('/get_shapes')
-    .then(response => response.json())
-    .then(data => {
-      shapesCache = data; // ローカルキャッシュに保存
-      console.log('shapesCache:', shapesCache);
-      drawShapesFromCache(); // キャッシュから描画
-    });
-}
-
-
-function drawShapesFromCache() {
-  //console.log("I'm in drawShapesFromCache()");
-  //console.trace();
-  //console.log(shapesCache);
-
-  shapesCache.forEach(shape => {
-    // 描画色を設定（選択されている場合は水色、それ以外は黒）
-    ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
-    ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
-
-    if (shape.shape_type === 'Point') {
-      // 点を描画
-      const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
-      ctx.beginPath();
-      ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
-      ctx.fill();
-    } else if (shape.shape_type === 'Line') {
-      // 線を描画
-      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.x, shape.coordinates.p1.y);
-      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.x, shape.coordinates.p2.y);
-      ctx.beginPath();
-      ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
-      ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
-      ctx.stroke();
-    }
-    // 他の図形の描画もここに追加できます
-  });
-}
-
 function changeMode(newMode) {
   modeManager.setMode(newMode);
 
@@ -290,8 +279,8 @@ function changeMode(newMode) {
 
 //console.log("script.js was started.#1");
 
-// 現在アクティブなボタンを保持
-let activeButton = null;  
+// 現在アクティブなボタンを保持（初期状態は、Select mode）
+let activeButton = document.getElementById(`select_mode_Button`);
 
 // 「1ミリ当たりの物理ピクセル数」の計算
 var dpi = 100;
@@ -369,8 +358,8 @@ canvas.addEventListener('click', (event) => {
             // 終点を設定
             p2Point = cadCoordinates;
             
-            console.log("p1:",p1Point);
-            console.log("p2:",p2Point);
+            //console.log("p1:",p1Point);
+            //console.log("p2:",p2Point);
             
             // ここでバックエンドに線の始点と終点を送信
             sendShapeToBackend('Line', {p1: p1Point, p2: p2Point});
@@ -391,7 +380,7 @@ canvas.addEventListener('click', (event) => {
         const toleranceInCAD = 5 / (camera.scale * camera.conversionRate);
 
         // マウスでクリックした座標と許容値をバックエンドに送信
-        fetch('/select_point', {
+        fetch('/select_shape', {
             method: 'POST',
             body: JSON.stringify({ coordinates: cadCoordinates, tolerance: toleranceInCAD }),
             headers: { 'Content-Type': 'application/json' }
@@ -399,7 +388,7 @@ canvas.addEventListener('click', (event) => {
         .then(data => {
             if (data.status === 'success') {
                 // 点を水色でハイライト（描画関数内で処理）
-                console.log("select point:", data);
+                console.log("select shape:", data);
                 draw();
             }
         });
