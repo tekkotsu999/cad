@@ -1,27 +1,24 @@
 import matplotlib.pyplot as plt
+from shapes import *
 
-def plot_points_with_lines(points, updated_points, lines=None, updated_lines=None):
-    # Extract initial coordinates
-    initial_x_values = [point.x for point in points]
-    initial_y_values = [point.y for point in points]
 
+def plot_results(initial_shapes, current_shapes):
     fig, ax = plt.subplots()
 
-    # Plot initial coordinates
-    ax.scatter(initial_x_values, initial_y_values, label='Initial Points')
-    if lines:
-        for line in lines:
-            ax.plot([line.p1.x, line.p2.x], [line.p1.y, line.p2.y], linestyle='dashed', color='blue')
+    # 過去のshapesを描画
+    for shape in initial_shapes:
+        if isinstance(shape, Point):
+            ax.scatter(shape.x, shape.y, color='blue', label='Initial Point')
+        elif isinstance(shape, Line):
+            ax.plot([shape.p1.x, shape.p2.x], [shape.p1.y, shape.p2.y], linestyle='dashed', color='blue', label='Initial Line')
 
-    # Extract result coordinates
-    x_values = [point.x for point in updated_points]
-    y_values = [point.y for point in updated_points]
+    # 現在のshapesを描画
+    for shape in current_shapes:
+        if isinstance(shape, Point):
+            ax.scatter(shape.x, shape.y, color='red', label='Current Point')
+        elif isinstance(shape, Line):
+            ax.plot([shape.p1.x, shape.p2.x], [shape.p1.y, shape.p2.y], color='red', label='Current Line')
 
-    # Plot results
-    ax.scatter(x_values, y_values, label='Updated Points')
-    if updated_lines:
-        for line in updated_lines:
-            ax.plot([line.p1.x, line.p2.x], [line.p1.y, line.p2.y], color='red')
 
     ax.set_xlabel('x')
     ax.set_ylabel('y')

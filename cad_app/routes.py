@@ -6,10 +6,10 @@ from flask import jsonify, request
 # from .src.optimize import run_optimization
 
 from .src.shapes import ShapeManager,Point,Line
-
+from .src.constraints import ConstraintManager
 
 shape_manager = ShapeManager()
-
+constraint_manager = ConstraintManager()
 
 # ---------------------------------------------------------------
 @app.route('/')
@@ -144,6 +144,15 @@ def shape_to_dict(shape):
         return {'type': 'Line', 'p1': shape.p1.__dict__, 'p2': shape.p2.__dict__, 'is_selected': shape.is_selected}
 
 # ---------------------------------------------------------------
+# "Apply FixedPointConstraint" ボタンがクリックされたときの処理
+@app.route('/apply_fixed_point_constraint', methods=['POST'])
+def apply_fixed_point_constraint():
+    # 選択状態にある図形を取得
+    selected_shape = shape_manager.get_selected_shape()  # このメソッドは実装が必要
+    
+    # 選択された図形に拘束条件を適用（具体的な処理は省略）
+    constraint_manager.add_constraint( FixedPointConstraint(selected_shape.id, selected_shape.x, selected_shape.y) )
 
-
+    # 拘束条件を適用した後の図形データをフロントエンドに送り返す
+    return jsonify({'status': 'success', 'updated_shape': updated_shape})
 

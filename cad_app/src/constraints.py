@@ -9,10 +9,9 @@ class ConstraintManager:
     def __init__(self):
         self.constraints = []
 
-    def add_constraint(self, constraint):
+    def apply_constraints(self, constraint, points):
         self.constraints.append(constraint)
 
-    def apply_constraints(self, points):
         # Flatten the points for optimization
         initial_points_flat = []
         for point in points:
@@ -25,8 +24,6 @@ class ConstraintManager:
         for c in self.constraints:
             constraint_dict = {'type': 'eq', 'fun': c, 'args': (points,)}
             constraints_for_optimization.append(constraint_dict)
-
-        # constraints_for_optimization = [{'type': 'eq', 'fun': c, 'args': (points,)} for c in constraints]
 
         def target_distance(points_flat):
             return 0
@@ -41,8 +38,12 @@ class ConstraintManager:
         # Extract the updated points from the result
         updated_points_flat = res.x
         updated_points = []
-        for i in range(0, len(updated_points_flat), 2):
-            updated_points.append(Point(updated_points_flat[i], updated_points_flat[i+1]))
+        for i, original_point in enumerate(points):
+            new_x = updated_points_flat[i * 2]
+            new_y = updated_points_flat[i * 2 + 1]
+            updated_point = Point(new_x, new_y)
+            updated_point.id = original_point.id  # 元のPointオブジェクトからidをコピー
+            updated_points.append(updated_point)
         
         return updated_points
 

@@ -521,25 +521,23 @@ canvas.addEventListener('contextmenu', (event) => {
 
 
 // ------------------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", function() {
-    // "Apply FixedPointConstraint" ボタンがクリックされたときの処理
-    document.getElementById("apply-fixed-point-constraint").addEventListener("click", function() {
-        // バックエンドに拘束条件を適用するリクエストを送る
-        fetch("/apply_fixed_point_constraint", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({})  // 任意のデータを送る場合はここに記述
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                // 成功した場合の処理（例：画面の更新）
-            } else {
-                // 失敗した場合の処理（例：エラーメッセージの表示）
-            }
-        });
+// "Apply FixedPointConstraint" ボタンがクリックされたときの処理
+document.getElementById("apply-fixed-point-constraint").addEventListener("click", function() {
+    // バックエンドに拘束条件を適用するリクエストを送る
+    fetch("/apply_fixed_point_constraint", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})  // 任意のデータを送る場合はここに記述
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            // 成功した場合の処理（例：画面の更新）
+        } else {
+            // 失敗した場合の処理（例：エラーメッセージの表示）
+        }
     });
 });
 
