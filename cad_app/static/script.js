@@ -542,6 +542,27 @@ document.getElementById("apply-fixed-point-constraint").addEventListener("click"
     });
 });
 
+// ------------------------------------------------------------------------
+// "Apply FixedLengthConstraint" ボタンがクリックされたときの処理
+document.getElementById("apply-fixed-length-constraint").addEventListener("click", function() {
+    // バックエンドに拘束条件を適用するリクエストを送る
+    fetch("/apply_fixed_length_constraint", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})  // 任意のデータを送る場合はここに記述
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            console.log('apply_fixed_length_constraint:', data);
+            draw();
+        } else {
+            // 失敗した場合の処理（例：エラーメッセージの表示）
+        }
+    });
+});
 
 // **************************************************************
 

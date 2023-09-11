@@ -154,3 +154,29 @@ def apply_fixed_point_constraint():
     # 拘束条件を適用した後の図形データをフロントエンドに送り返す
     return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
 
+# ---------------------------------------------------------------
+# "Apply FixedLengthConstraint" ボタンがクリックされたときの処理
+@app.route('/apply_fixed_length_constraint', methods=['POST'])
+def apply_fixed_length_constraint():
+    # 選択状態にある図形を取得
+    selected_shape = shape_manager.get_selected_shape()
+    # print(selected_shape)
+
+    # 選択された図形に対する、FixedLengthConstraintオブジェクトの生成
+    constraint = FixedLengthConstraint(selected_shape.p1.id,selected_shape.p2.id, selected_shape.length)
+
+    # 現在の全ての座標情報を取得
+    current_points = shape_manager.get_points()
+
+    # 現在の座標状態の下で、選択された図形に拘束条件を適用（最適化計算を実施）
+    updated_points = constraint_manager.apply_constraints(constraint, current_points)
+
+    # その結果でshape_manager.shapesを更新する
+    shape_manager.update_shapes(updated_points)
+
+    shapes_data = [shape.to_json() for shape in shape_manager.shapes]
+    constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
+
+    # 拘束条件を適用した後の図形データをフロントエンドに送り返す
+    return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+
