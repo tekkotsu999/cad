@@ -1,7 +1,7 @@
 from shapes import *
 from constraints import *
-from optimize import *
 from plot_results import plot_points_with_lines
+from scipy.optimize import minimize
 
 # 使用例
 shape_manager = ShapeManager()
@@ -20,8 +20,7 @@ constraint_manager.add_constraint(constraint2)
 
 # 最適化を実行
 points = shape_manager.get_points()
-constraints = constraint_manager.constraints
-updated_points = optimization(constraints, points)
+updated_points = constraint_manager.apply_constraints(points)
 
 updated_lines = [ Line(updated_points[0], updated_points[1]) ]
 
