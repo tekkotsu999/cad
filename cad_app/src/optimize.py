@@ -56,7 +56,7 @@ def move_point(target_point, target_position, constraints, points):
     return updated_points
 
 
-def apply_constraints(constraints, points):
+def optimization(constraints, points):
     # Flatten the points for optimization
     initial_points_flat = []
     for point in points:

@@ -142,3 +142,6 @@ def shape_to_dict(shape):
         return {'type': 'Point', 'x': shape.x, 'y': shape.y, 'is_selected': shape.is_selected}
     elif isinstance(shape, Line):
         return {'type': 'Line', 'p1': shape.p1.__dict__, 'p2': shape.p2.__dict__, 'is_selected': shape.is_selected}
+
+# ---------------------------------------------------------------
+

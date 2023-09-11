@@ -11,7 +11,7 @@ def plot_points_with_lines(points, updated_points, lines=None, updated_lines=Non
     ax.scatter(initial_x_values, initial_y_values, label='Initial Points')
     if lines:
         for line in lines:
-            ax.plot([line.point1.x, line.point2.x], [line.point1.y, line.point2.y], linestyle='dashed', color='blue')
+            ax.plot([line.p1.x, line.p2.x], [line.p1.y, line.p2.y], linestyle='dashed', color='blue')
 
     # Extract result coordinates
     x_values = [point.x for point in updated_points]
@@ -21,7 +21,7 @@ def plot_points_with_lines(points, updated_points, lines=None, updated_lines=Non
     ax.scatter(x_values, y_values, label='Updated Points')
     if updated_lines:
         for line in updated_lines:
-            ax.plot([line.point1.x, line.point2.x], [line.point1.y, line.point2.y], color='red')
+            ax.plot([line.p1.x, line.p2.x], [line.p1.y, line.p2.y], color='red')
 
     ax.set_xlabel('x')
     ax.set_ylabel('y')

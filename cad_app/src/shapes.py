@@ -1,5 +1,5 @@
 import numpy as np
-
+import uuid  # 一意なIDを生成するためのモジュール
 
 class ShapeManager:
     def __init__(self):
@@ -22,18 +22,20 @@ class ShapeManager:
 # 座標を持つPointクラスを定義
 class Point:
     def __init__(self, x, y):
+        self.id = uuid.uuid4()  # 一意なIDを生成
         self.x = x
         self.y = y
         self.is_selected = False
 
     def __repr__(self):
-        return f"Point(x={self.x}, y={self.y})"
+        return f"Point(id={self.id}, x={self.x}, y={self.y})"
 
 
 # 2つのPointインスタンスを結ぶLineクラスを定義
 # Lineインスタンスはその長さも計算
 class Line:
     def __init__(self, p1, p2):
+        self.id = uuid.uuid4()  # 一意なIDを生成
         self.p1 = p1
         self.p2 = p2
         self.is_selected = False

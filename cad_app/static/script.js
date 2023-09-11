@@ -136,7 +136,7 @@ function drawShapesFromCache() {
       // 点を描画
       const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
       ctx.beginPath();
-      ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 5, 0, 2 * Math.PI);
+      ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
       ctx.fill();
     } else if (shape.shape_type === 'Line') {
       // 線を描画
@@ -518,6 +518,30 @@ canvas.addEventListener('contextmenu', (event) => {
   event.preventDefault();
 });
 
+
+
+// ------------------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", function() {
+    // "Apply FixedPointConstraint" ボタンがクリックされたときの処理
+    document.getElementById("apply-fixed-point-constraint").addEventListener("click", function() {
+        // バックエンドに拘束条件を適用するリクエストを送る
+        fetch("/apply_fixed_point_constraint", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})  // 任意のデータを送る場合はここに記述
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // 成功した場合の処理（例：画面の更新）
+            } else {
+                // 失敗した場合の処理（例：エラーメッセージの表示）
+            }
+        });
+    });
+});
 
 // **************************************************************
 
