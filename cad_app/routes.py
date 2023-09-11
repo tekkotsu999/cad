@@ -88,7 +88,7 @@ def select_shape():
                 shape.is_selected = True
                 return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
 
-    # 線の選択（新規追加）
+    # 線の選択
     for shape in shape_manager.get_shapes():
         if isinstance(shape, Line):
             # 線とクリック位置との距離を計算（実装が必要）
@@ -144,4 +144,6 @@ def shape_to_dict(shape):
         return {'type': 'Line', 'p1': shape.p1.__dict__, 'p2': shape.p2.__dict__, 'is_selected': shape.is_selected}
 
 # ---------------------------------------------------------------
+
+
 

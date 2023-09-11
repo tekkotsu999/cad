@@ -1,11 +1,9 @@
-from .points import Point
-from .lines import Line
-from .constraints import *
-import numpy as np
 from scipy.optimize import minimize
 from copy import deepcopy
 import matplotlib.pyplot as plt
+import numpy as np
 
+from shapes import *
 
 # 目標点までの距離を計算する関数
 # これが最小化の対象となる
@@ -63,11 +61,14 @@ def optimization(constraints, points):
         initial_points_flat.extend([point.x, point.y])
     initial_points_flat = np.array(initial_points_flat)
     
-    # Convert constraints to format suitable for scipy's minimize function    
+    # Convert constraints to format suitable for scipy's minimize function
+    # argsフィールドを使用して、original_pointsを制約関数に渡す  
     constraints_for_optimization = []
     for c in constraints:
-        constraint_dict = {'type': 'eq', 'fun': c}
+        constraint_dict = {'type': 'eq', 'fun': c, 'args': (points,)}
         constraints_for_optimization.append(constraint_dict)
+
+    # constraints_for_optimization = [{'type': 'eq', 'fun': c, 'args': (points,)} for c in constraints]
 
     def target_distance(points_flat):
         return 0

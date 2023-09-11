@@ -1,39 +1,90 @@
-from .points import Point
-from .lines import Line
 import numpy as np
+import uuid  # 一意なIDを生成するためのモジュール
 
+from shapes import *
+
+# ConstraintManagerクラス
+class ConstraintManager:
+    def __init__(self):
+        self.constraints = []
+
+    def add_constraint(self, constraint):
+        self.constraints.append(constraint)
+
+# -----------------------------------------------------------------------
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する
 # ポイントのインデックスを引数として取り、そのポイントの位置を最適化変数から取得する
+# class FixedPointConstraint:
+#     def __init__(self, point_idx, points):
+#         self.point_idx = point_idx
+#         self.initial_point = points[point_idx]
+# 
+#     # 初期位置からの変位を計算します。
+#     # 制約としてはこの変位が0であることで扱う
+#     def __call__(self, points_flat):
+#         current_point = Point(*points_flat[self.point_idx * 2: self.point_idx * 2 + 2])
+#         diff_vector =  np.array([self.initial_point.x, self.initial_point.y]) - np.array([current_point.x,current_point.y])
+#         return np.linalg.norm(diff_vector)
+
 class FixedPointConstraint:
-    def __init__(self, point_idx, points):
-        self.point_idx = point_idx
-        self.initial_point = points[point_idx]
+    def __init__(self, fixed_point_id, fixed_x, fixed_y):
+        self.id = str(uuid.uuid4())
+        self.fixed_point_id = fixed_point_id
+        self.fixed_x = fixed_x
+        self.fixed_y = fixed_y
 
-    # 初期位置からの変位を計算します。
-    # 制約としてはこの変位が0であることで扱う
-    def __call__(self, points_flat):
-        current_point = Point(*points_flat[self.point_idx * 2: self.point_idx * 2 + 2])
-        diff_vector =  np.array([self.initial_point.x, self.initial_point.y]) - np.array([current_point.x,current_point.y])
-        return np.linalg.norm(diff_vector)
+    def __call__(self, points_flat, original_points):
+        points = [Point(points_flat[i], points_flat[i+1]) for i in range(0, len(points_flat), 2)]
+        for i, p in enumerate(original_points):
+            points[i].id = p.id  # 元のPointオブジェクトからidをコピー
 
+        point = next(p for p in points if p.id == self.fixed_point_id)
+        dx = point.x - self.fixed_x
+        dy = point.y - self.fixed_y
+        return np.sqrt(dx**2 + dy**2)
 
+# -----------------------------------------------------------------------
 # FixedLengthConstraintクラスは、ある線の長さが固定されていることを表現する
 # ポイントのインデックスと初期の長さを引数として取り、そのラインの現在の長さを最適化変数から計算する
+# class FixedLengthConstraint:
+#     def __init__(self, point1_idx, point2_idx, initial_length):
+#         self.point1_idx = point1_idx
+#         self.point2_idx = point2_idx
+#         self.initial_length = initial_length
+# 
+#     # 線の現在の長さと初期の長さとの差を計算します。
+#     # 制約としてはこの差が0とすることで扱う
+#     def __call__(self, points_flat):
+#         point1 = Point(*points_flat[self.point1_idx * 2: self.point1_idx * 2 + 2])
+#         point2 = Point(*points_flat[self.point2_idx * 2: self.point2_idx * 2 + 2])
+#         current_length = Line(point1, point2).length
+#         return current_length - self.initial_length
+
 class FixedLengthConstraint:
-    def __init__(self, point1_idx, point2_idx, initial_length):
-        self.point1_idx = point1_idx
-        self.point2_idx = point2_idx
-        self.initial_length = initial_length
+    def __init__(self, point1_id, point2_id, length):
+        self.id = str(uuid.uuid4())
+        self.point1_id = point1_id
+        self.point2_id = point2_id
+        self.length = length
 
-    # 線の現在の長さと初期の長さとの差を計算します。
-    # 制約としてはこの差が0とすることで扱う
-    def __call__(self, points_flat):
-        point1 = Point(*points_flat[self.point1_idx * 2: self.point1_idx * 2 + 2])
-        point2 = Point(*points_flat[self.point2_idx * 2: self.point2_idx * 2 + 2])
-        current_length = Line(point1, point2).length
-        return current_length - self.initial_length
+    def __call__(self, points_flat, original_points):
+        # points_flatからPointオブジェクトのリストを生成
+        points = [Point(points_flat[i], points_flat[i+1]) for i in range(0, len(points_flat), 2)]
+        
+        # unique_idを元のPointオブジェクトからコピー
+        for i, p in enumerate(original_points):
+            points[i].id = p.id
 
+        # unique_idを使って、対象となるPointオブジェクトを見つける
+        point1 = next(p for p in points if p.id == self.point1_id)
+        point2 = next(p for p in points if p.id == self.point2_id)
 
+        # 点間の距離を計算
+        dx = point1.x - point2.x
+        dy = point1.y - point2.y
+        return np.sqrt(dx**2 + dy**2) - self.length
+
+# -----------------------------------------------------------------------
 # Defining VerticalConstraint class
 # このクラスは、2つの点間の線が垂直であることを保証するための制約を提供する
 class VerticalConstraint:
@@ -54,7 +105,7 @@ class VerticalConstraint:
 # vc(points_flat_example)  # This should return the difference between x-coordinates of points a and b.
 
 
-
+# -----------------------------------------------------------------------
 # Defining HorizontalConstraint class
 # このクラスは、2つの点間の線が水平であることを保証するための制約を提供する
 class HorizontalConstraint:
@@ -70,6 +121,7 @@ class HorizontalConstraint:
         y2 = points_flat[self.point2_idy * 2 + 1]
         return y1 - y2
 
+# -----------------------------------------------------------------------
 # Define the CoincidentPointsConstraint class
 # 点と点の一致拘束
 class CoincidentPointsConstraint:
@@ -88,7 +140,7 @@ class CoincidentPointsConstraint:
         # Return the norm of the difference vector. This value should be minimized to zero for the two points to coincide.
         return np.linalg.norm(diff_vector)
 
-
+# -----------------------------------------------------------------------
 # Define the PointOnLineConstraint class
 # 点と線の一致拘束
 # 線上の任意の点は、線の両端の点を使って、以下のパラメータ方程式で表現できる：
@@ -123,6 +175,7 @@ class PointOnLineConstraint:
         # Return the difference between the computed t values. This value should be minimized to zero for the point to lie on the line.
         return t_x - t_y
 
+# -----------------------------------------------------------------------
 # Define the ParallelLinesConstraint class
 # 線と線の平行拘束
 # 2つの線が平行である場合、それらの線の方向ベクトルが一致するか、または逆向きである必要がある。
@@ -150,6 +203,7 @@ class ParallelLinesConstraint:
         
         return cross_product
 
+# -----------------------------------------------------------------------
 # Define the PerpendicularLinesConstraint class
 # 線と線の垂直拘束
 # 2つの線が垂直である場合、それらの線の方向ベクトルのドット積は0である必要がある
@@ -177,6 +231,7 @@ class PerpendicularLinesConstraint:
         
         return dot_product
 
+# -----------------------------------------------------------------------
 # Define the EqualLengthLinesConstraint class
 # 線長一致拘束
 # 2つの線の長さの差を計算し、その差が0になるように制約を適用する
