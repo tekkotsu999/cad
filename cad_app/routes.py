@@ -133,16 +133,16 @@ def shape_to_dict(shape):
 @app.route('/apply_fixed_point_constraint', methods=['POST'])
 def apply_fixed_point_constraint():
     # 選択状態にある図形を取得
-    selected_shape = shape_manager.get_selected_shape()  # このメソッドは実装が必要
-    print(selected_shape)
+    selected_shape = shape_manager.get_selected_shape()
+    # print(selected_shape)
 
-    # 選択された図形に対する、拘束条件オブジェクトの生成
+    # 選択された図形に対する、FixedPointConstraintオブジェクトの生成
     constraint = FixedPointConstraint(selected_shape.id, selected_shape.x, selected_shape.y)
 
     # 現在の全ての座標情報を取得
     current_points = shape_manager.get_points()
 
-    # 選択された図形に拘束条件を適用（最適化計算を実施）
+    # 現在の座標状態の下で、選択された図形に拘束条件を適用（最適化計算を実施）
     updated_points = constraint_manager.apply_constraints(constraint, current_points)
 
     # その結果でshape_manager.shapesを更新する

@@ -30,6 +30,7 @@ class ConstraintManager:
         
         # Use 'SLSQP' method as it supports equality constraints
         res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+        # print(res.message)
         
         # Check if the optimizer has converged
         if not res.success:
