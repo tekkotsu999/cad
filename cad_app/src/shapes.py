@@ -77,6 +77,14 @@ class Point(Shape):
     def __repr__(self):
         return f"Point(id={self.id}, x={self.x}, y={self.y})"
 
+    def to_json(self):
+        return {
+            'shape_type': 'Point',
+            'id': self.id,
+            'coordinates': {'x': self.x, 'y': self.y},
+            'is_selected': self.is_selected
+        }
+
 
 # -----------------------------------------------------------------------
 # 2つのPointインスタンスを結ぶLineクラスを定義
@@ -94,3 +102,14 @@ class Line(Shape):
 
     def __repr__(self):
         return f"Line(id={self.id}, p1={self.p1}, p2={self.p2}], "
+
+    def to_json(self):
+        return {
+            'shape_type': 'Line',
+            'id': self.id,
+            'coordinates': {
+                'p1': {'x': self.p1.x, 'y': self.p1.y},
+                'p2': {'x': self.p2.x, 'y': self.p2.y}
+            },
+            'is_selected': self.is_selected
+        }

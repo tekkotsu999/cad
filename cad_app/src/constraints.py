@@ -2,7 +2,7 @@ import numpy as np
 import uuid  # 一意なIDを生成するためのモジュール
 from scipy.optimize import minimize
 
-from shapes import *
+from .shapes import *
 
 # ConstraintManagerクラス
 class ConstraintManager:
@@ -78,6 +78,12 @@ class FixedPointConstraint:
         dx = point.x - self.fixed_x
         dy = point.y - self.fixed_y
         return np.sqrt(dx**2 + dy**2)
+
+    def to_json(self):
+        return {
+            'constraint_type': 'FixedPointConstraint',
+            'fixed_point_id': self.fixed_point_id
+        }
 
 # -----------------------------------------------------------------------
 # FixedLengthConstraintクラスは、ある線の長さが固定されていることを表現する

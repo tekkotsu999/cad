@@ -6,7 +6,7 @@ from flask import jsonify, request
 # from .src.optimize import run_optimization
 
 from .src.shapes import ShapeManager,Point,Line
-from .src.constraints import ConstraintManager
+from .src.constraints import *
 
 shape_manager = ShapeManager()
 constraint_manager = ConstraintManager()
@@ -48,22 +48,7 @@ def add_shape():
 # 全ての図形を取得するためのルート
 @app.route('/get_shapes', methods=['GET'])
 def get_shapes():
-    shapes_data = []
-    for shape in shape_manager.shapes:
-        if isinstance(shape, Point):
-            shapes_data.append({
-                'shape_type': 'Point',
-                'coordinates' : { 'x': shape.x, 'y': shape.y},
-                'is_selected' : shape.is_selected
-            })
-        elif isinstance(shape, Line):
-            shapes_data.append({
-                'shape_type': 'Line',
-                'coordinates': {
-                    'p1': {'x': shape.p1.x, 'y': shape.p1.y},
-                    'p2': {'x': shape.p2.x, 'y': shape.p2.y}},
-                'is_selected' : shape.is_selected
-            })
+    shapes_data = [shape.to_json() for shape in shape_manager.shapes]
     # print("Shapes data:", shapes_data)
     return jsonify(shapes_data)
 
@@ -149,10 +134,23 @@ def shape_to_dict(shape):
 def apply_fixed_point_constraint():
     # 選択状態にある図形を取得
     selected_shape = shape_manager.get_selected_shape()  # このメソッドは実装が必要
-    
-    # 選択された図形に拘束条件を適用（具体的な処理は省略）
-    constraint_manager.add_constraint( FixedPointConstraint(selected_shape.id, selected_shape.x, selected_shape.y) )
+    print(selected_shape)
+
+    # 選択された図形に対する、拘束条件オブジェクトの生成
+    constraint = FixedPointConstraint(selected_shape.id, selected_shape.x, selected_shape.y)
+
+    # 現在の全ての座標情報を取得
+    current_points = shape_manager.get_points()
+
+    # 選択された図形に拘束条件を適用（最適化計算を実施）
+    updated_points = constraint_manager.apply_constraints(constraint, current_points)
+
+    # その結果でshape_manager.shapesを更新する
+    shape_manager.update_shapes(updated_points)
+
+    shapes_data = [shape.to_json() for shape in shape_manager.shapes]
+    constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
 
     # 拘束条件を適用した後の図形データをフロントエンドに送り返す
-    return jsonify({'status': 'success', 'updated_shape': updated_shape})
+    return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
 

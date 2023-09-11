@@ -534,12 +534,14 @@ document.getElementById("apply-fixed-point-constraint").addEventListener("click"
     .then(response => response.json())
     .then(data => {
         if (data.status === "success") {
+            console.log('apply_fixed_point_constraint:', data);
             // 成功した場合の処理（例：画面の更新）
         } else {
             // 失敗した場合の処理（例：エラーメッセージの表示）
         }
     });
 });
+
 
 // **************************************************************
 
