@@ -343,11 +343,15 @@ let p2Point = null;
 // 線を描画中かどうかを示すフラグ
 let isDrawingLine = false;
 
-// 右クリックのドラッグしているかどうかを示すフラグ
+// ホイールボタンをドラッグしているかどうかを示すフラグ
 let isDragging = false;
 
 // 画面移動時の、マウス位置を格納する変数
 let lastMousePosition = null;
+
+// 点をドラッグしているかどうかを示すフラグ
+let isDraggingPoint = false;
+
 
 // ------------------------------------------------------------------------
 // click
@@ -421,41 +425,65 @@ canvas.addEventListener('click', (event) => {
 });
 
 // ------------------------------------------------------------------------
-// wheel
-// ズームイン、ズームアウト
-canvas.addEventListener('wheel', (event) => {
-  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
-
-  // イベントのデフォルト動作（スクロール）を無効化
-  event.preventDefault();
-
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - rect.left;
-  const mouseY = event.clientY - rect.top;
-
-  if (event.deltaY < 0) {
-    camera.zoomOut(1.1, mouseX, mouseY);
-  } else {
-    camera.zoomIn(1.1, mouseX, mouseY);
-  }
-
-  draw_without_getShapesFromBackend();  // 再描画
-
-}, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
-
-// ------------------------------------------------------------------------
 // mousedown
 // 画面の並行移動時に、右クリックでのドラッグ開始
 canvas.addEventListener('mousedown', (event) => {
   // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
 
-  if (event.button === 2) { // 右クリック
+  if (event.button === 1) { // ホイールボタン
     isDragging = true;
 
     // Canvas要素に対する相対座標を取得する
     const rect = canvas.getBoundingClientRect();
     lastMousePosition = { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
+  if (event.button === 2) {  // 右クリック
+
+    // Canvas要素に対する相対座標を取得する
+    const rect = canvas.getBoundingClientRect();
+    lastMousePosition = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+
+    // マウス位置取得処理
+    // canvasの絶対位置を一度取得して変数に格納
+    const rect = canvas.getBoundingClientRect();
+    // canvas内での相対座標を計算
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+    // canvas座標をCAD座標に変換
+    const cadCoordinates = camera.toCAD(canvasX, canvasY);
+
+    // 画面上での許容値（5pt）をCAD座標系に変換
+    // この変換にはcamera.scaleとcamera.conversionRateを使用
+    const toleranceInCAD = 5 / (camera.scale * camera.conversionRate);
+
+    // マウスでクリックした座標と許容値をバックエンドに送信
+    fetch('/select_shape', {
+        method: 'POST',
+        body: JSON.stringify({ coordinates: cadCoordinates, tolerance: toleranceInCAD }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            isDraggingPoint = true;
+        }
+    });
+  }
+
+});
+
+// ------------------------------------------------------------------------
+// mouseup
+// ドラッグ終了
+canvas.addEventListener('mouseup', (event) => {
+  // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
+
+  if (event.button === 1) { // ホイールボタン
+    isDragging = false;
+  }
+  if (event.button === 2) { // 右クリック
+    isDraggingPoint = false;
+  }
+
 });
 
 // ------------------------------------------------------------------------
@@ -479,7 +507,7 @@ canvas.addEventListener('mousemove', (event) => {
   // 現在のモードを取得
   const currentMode = modeManager.getMode();
 
-  // 右クリックでドラッグしているとき
+  // ホイールボタンでドラッグしているとき
   // mode依存なし
   if (isDragging) {
     // Canvas座標系上でのマウスの移動量
@@ -497,6 +525,24 @@ canvas.addEventListener('mousemove', (event) => {
 
     // 再描画
     draw_without_getShapesFromBackend();
+  }
+
+  // 点をドラッグしているとき
+  if (isDraggingPoint) {
+    // 選択された点を移動する処理をここに書く
+
+    // Canvas座標系上でのマウスの移動量
+    const dxCanvas = canvasX - lastMousePosition.x;
+    const dyCanvas = canvasY - lastMousePosition.y;
+
+    // CAD座標系上での移動量に変換
+    const movementCAD = camera.toCAD(-dxCanvas, -dyCanvas, true);
+
+    // 点を移動（拘束条件がある場合は、それに従って移動）
+    // この部分はバックエンドとの通信が必要かもしれません
+
+    // 最後に、現在のマウス位置を保存
+    lastMousePosition = currentMousePosition;
   }
 
 
@@ -524,15 +570,27 @@ canvas.addEventListener('mousemove', (event) => {
 });
 
 // ------------------------------------------------------------------------
-// mouseup
-// ドラッグ終了
-canvas.addEventListener('mouseup', (event) => {
+// wheel
+// ズームイン、ズームアウト
+canvas.addEventListener('wheel', (event) => {
   // 現状プログラムでは、modeに依存しないため、modeの取得は行わない
 
-  if (event.button === 2) { // 右クリック
-    isDragging = false;
+  // イベントのデフォルト動作（スクロール）を無効化
+  event.preventDefault();
+
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  if (event.deltaY < 0) {
+    camera.zoomOut(1.1, mouseX, mouseY);
+  } else {
+    camera.zoomIn(1.1, mouseX, mouseY);
   }
-});
+
+  draw_without_getShapesFromBackend();  // 再描画
+
+}, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
 // ------------------------------------------------------------------------
 // contextmenu
@@ -542,7 +600,6 @@ canvas.addEventListener('contextmenu', (event) => {
 
   event.preventDefault();
 });
-
 
 
 // ------------------------------------------------------------------------
