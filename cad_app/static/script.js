@@ -136,7 +136,7 @@ function drawShapesFromCache() {
       ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
       ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
 
-      const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
+      const canvasCoordinates = camera.toCanvas(shape.x, shape.y);
       ctx.beginPath();
       ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
       ctx.fill();
@@ -148,28 +148,28 @@ function drawShapesFromCache() {
       ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
       ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
 
-      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.coordinates.x, shape.coordinates.p1.coordinates.y);
-      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.coordinates.x, shape.coordinates.p2.coordinates.y);
+      const p1CanvasCoordinates = camera.toCanvas(shape.p1.x, shape.p1.y);
+      const p2CanvasCoordinates = camera.toCanvas(shape.p2.x, shape.p2.y);
       ctx.beginPath();
       ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
       ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
       ctx.stroke();
 
       // p1が選択されていた場合は、p1を水色で描画
-      if(shape.coordinates.p1.is_selected){
+      if(shape.p1.is_selected){
         ctx.fillStyle = 'lightblue';
         ctx.strokeStyle =  'lightblue';
-        const canvasCoordinates = camera.toCanvas(shape.coordinates.p1.coordinates.x, shape.coordinates.p1.coordinates.y);
+        const canvasCoordinates = camera.toCanvas(shape.p1.x, shape.p1.y);
         ctx.beginPath();
         ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
         ctx.fill();
       }
 
       // p2が選択されていた場合は、p2を水色で描画
-      if(shape.coordinates.p2.is_selected){
+      if(shape.p2.is_selected){
         ctx.fillStyle = 'lightblue';
         ctx.strokeStyle =  'lightblue';
-        const canvasCoordinates = camera.toCanvas(shape.coordinates.p2.coordinates.x, shape.coordinates.p2.coordinates.y);
+        const canvasCoordinates = camera.toCanvas(shape.p2.x, shape.p2.y);
         ctx.beginPath();
         ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
         ctx.fill();

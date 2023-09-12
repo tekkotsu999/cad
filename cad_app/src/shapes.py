@@ -88,7 +88,8 @@ class Point(Shape):
         return {
             'shape_type': 'Point',
             'id': self.id,
-            'coordinates': {'x': self.x, 'y': self.y},
+            'x': self.x,
+            'y': self.y,
             'is_selected': self.is_selected
         }
 
@@ -114,9 +115,7 @@ class Line(Shape):
         return {
             'shape_type': 'Line',
             'id': self.id,
-            'coordinates': {
-                'p1': self.p1.to_json(),
-                'p2': self.p2.to_json()
-            },
+            'p1': self.p1.to_json(),
+            'p2': self.p2.to_json(),
             'is_selected': self.is_selected
         }
