@@ -67,7 +67,7 @@ def select_shape():
                         shape_tmp.p2.is_selected = False
 
                 shape.is_selected = True
-                return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+                return jsonify({'status': 'success', 'selected_shape': shape.to_json()})
     
     # 線の選択と端点の選択
     for shape in shape_manager.get_shapes():
@@ -91,15 +91,15 @@ def select_shape():
                 # 端点が選択された場合
                 if distance_p1 < tolerance:
                     shape.p1.is_selected = True
-                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+                    return jsonify({'status': 'success', 'selected_shape': shape.p1.to_json()})
                 if distance_p2 < tolerance:
                     shape.p2.is_selected = True
-                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+                    return jsonify({'status': 'success', 'selected_shape': shape.p2.to_json()})
 
                 # 線自体が選択された場合
                 if distance_line < tolerance:
                     shape.is_selected = True
-                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})              
+                    return jsonify({'status': 'success', 'selected_shape': shape.to_json()})              
 
     return jsonify({'status': 'no_shape_selected'})
 
@@ -135,12 +135,30 @@ def calculate_line_distance(line, click_x, click_y):
     
     return distance
 
-# shape_to_dict関数の実装
-def shape_to_dict(shape):
-    if isinstance(shape, Point):
-        return {'type': 'Point', 'x': shape.x, 'y': shape.y, 'is_selected': shape.is_selected}
-    elif isinstance(shape, Line):
-        return {'type': 'Line', 'p1': shape.p1.__dict__, 'p2': shape.p2.__dict__, 'is_selected': shape.is_selected}
+# ---------------------------------------------------------------
+@app.route('/move_point', methods=['POST'])
+def move_point():
+    # フロントエンドから送られてくるデータを取得
+    data = request.json
+    new_point = data.get('new_point')
+    target_point_id = data.get('target_point_id')
+
+    # ShapeManagerから現在の全ての点を取得
+    points = shape_manager.get_points()
+
+    # 拘束条件をを適用
+    updated_points = constraint_manager.apply_constraints(points, new_point, target_point_id)
+
+    # その結果でshape_manager.shapesを更新する
+    shape_manager.update_shapes(updated_points)
+
+    shapes_data = [shape.to_json() for shape in shape_manager.shapes]
+    constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
+
+    # 拘束条件を適用した後の図形データをフロントエンドに送り返す
+    return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+
+
 
 # ---------------------------------------------------------------
 # "Apply FixedPointConstraint" ボタンがクリックされたときの処理
@@ -159,12 +177,13 @@ def apply_fixed_point_constraint():
 
         # 選択された図形に対する、FixedPointConstraintオブジェクトを生成
         constraint = FixedPointConstraint(selected_shape.id, selected_shape.x, selected_shape.y)
+        constraint_manager.add_constraint(constraint)
 
         # 現在の全ての座標情報を取得
         current_points = shape_manager.get_points()
 
         # 現在の座標状態の下で、選択された図形に拘束条件を適用（最適化計算を実施）
-        updated_points = constraint_manager.apply_constraints(constraint, current_points)
+        updated_points = constraint_manager.apply_constraints(current_points)
 
         # その結果でshape_manager.shapesを更新する
         shape_manager.update_shapes(updated_points)
@@ -181,16 +200,14 @@ def apply_fixed_point_constraint():
         # 線の端点（２点）に対する、FixedPointConstraintオブジェクトを生成
         constraint1 = FixedPointConstraint(selected_shape.p1.id, selected_shape.p1.x, selected_shape.p1.y)
         constraint2 = FixedPointConstraint(selected_shape.p2.id, selected_shape.p2.x, selected_shape.p2.y)
+        constraint_manager.add_constraint(constraint1)
+        constraint_manager.add_constraint(constraint2)
 
         # 現在の全ての座標情報を取得
         current_points = shape_manager.get_points()
-        print("here1")
 
         # 現在の座標状態の下で、選択された図形に拘束条件を適用（最適化計算を実施）
-        constraint_manager.apply_constraints(constraint1, current_points)
-        print("here2")
-        updated_points = constraint_manager.apply_constraints(constraint2, current_points)
-        print("here3")
+        updated_points = constraint_manager.apply_constraints(current_points)
 
         # その結果でshape_manager.shapesを更新する
         shape_manager.update_shapes(updated_points)
@@ -228,12 +245,13 @@ def apply_fixed_length_constraint():
 
         # 選択された図形に対する、FixedLengthConstraintオブジェクトの生成
         constraint = FixedLengthConstraint(selected_shape.p1.id,selected_shape.p2.id, selected_shape.length)
+        constraint_manager.add_constraint(constraint)
 
         # 現在の全ての座標情報を取得
         current_points = shape_manager.get_points()
 
         # 現在の座標状態の下で、選択された図形に拘束条件を適用（最適化計算を実施）
-        updated_points = constraint_manager.apply_constraints(constraint, current_points)
+        updated_points = constraint_manager.apply_constraints(current_points)
 
         # その結果でshape_manager.shapesを更新する
         shape_manager.update_shapes(updated_points)

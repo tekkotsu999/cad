@@ -1,6 +1,7 @@
 import numpy as np
 import uuid  # 一意なIDを生成するためのモジュール
 from scipy.optimize import minimize
+import math
 
 from .shapes import *
 
@@ -9,12 +10,16 @@ class ConstraintManager:
     def __init__(self):
         self.constraints = []
 
-    def apply_constraints(self, constraint, points):
+    def add_constraint(self, constraint):
         self.constraints.append(constraint)
+
+    def apply_constraints(self, initial_points, new_point=None, target_point_id=None):
+        
+        print('initial_points:',initial_points)
 
         # Flatten the points for optimization
         initial_points_flat = []
-        for point in points:
+        for point in initial_points:
             initial_points_flat.extend([point.x, point.y])
         initial_points_flat = np.array(initial_points_flat)
         
@@ -22,14 +27,11 @@ class ConstraintManager:
         # argsフィールドを使用して、original_pointsを制約関数に渡す  
         constraints_for_optimization = []
         for c in self.constraints:
-            constraint_dict = {'type': 'eq', 'fun': c, 'args': (points,)}
+            constraint_dict = {'type': 'eq', 'fun': c, 'args': (initial_points,)}
             constraints_for_optimization.append(constraint_dict)
-
-        def target_distance(points_flat):
-            return 0
         
         # Use 'SLSQP' method as it supports equality constraints
-        res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+        res = minimize(self.target_distance, initial_points_flat, args=(initial_points, new_point, target_point_id), constraints = constraints_for_optimization, method='SLSQP')
         print(res.message)
         
         # Check if the optimizer has converged
@@ -39,14 +41,28 @@ class ConstraintManager:
         # Extract the updated points from the result
         updated_points_flat = res.x
         updated_points = []
-        for i, original_point in enumerate(points):
+        for i, original_point in enumerate(initial_points):
             new_x = updated_points_flat[i * 2]
             new_y = updated_points_flat[i * 2 + 1]
             updated_point = Point(new_x, new_y)
             updated_point.id = original_point.id  # 元のPointオブジェクトからidをコピー
             updated_points.append(updated_point)
         
+        print('updated_points:',updated_points)
         return updated_points
+    
+    
+    def target_distance(self, initial_points_flat, initial_points, new_point, target_point_id):
+        if new_point is None or target_point_id is None:
+            return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
+
+        # target_point_idに対応する点とnew_pointとの距離を計算
+        target_point = next((point for point in initial_points if point.id == target_point_id), None)
+        if target_point:
+            print(math.sqrt((new_point['x'] - target_point.x)**2 + (new_point['y'] - target_point.y)**2))
+            return math.sqrt((new_point['x'] - target_point.x)**2 + (new_point['y'] - target_point.y)**2)
+
+        return float('inf')  # IDが一致する点がない場合、無限大を返す
 
 # -----------------------------------------------------------------------
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する

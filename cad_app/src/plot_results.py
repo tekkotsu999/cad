@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from shapes import *
+from .shapes import *
 
 
 def plot_results(initial_shapes, current_shapes):

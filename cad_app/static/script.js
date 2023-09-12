@@ -352,6 +352,8 @@ let lastMousePosition = null;
 // 点をドラッグしているかどうかを示すフラグ
 let isDraggingPoint = false;
 
+// ドラッグしている点のidを格納する変数
+let selectedPointId = null;
 
 // ------------------------------------------------------------------------
 // click
@@ -441,14 +443,11 @@ canvas.addEventListener('mousedown', (event) => {
 
     // Canvas要素に対する相対座標を取得する
     const rect = canvas.getBoundingClientRect();
-    lastMousePosition = { x: event.clientX - rect.left, y: event.clientY - rect.top };
 
-    // マウス位置取得処理
-    // canvasの絶対位置を一度取得して変数に格納
-    const rect = canvas.getBoundingClientRect();
     // canvas内での相対座標を計算
     const canvasX = event.clientX - rect.left;
     const canvasY = event.clientY - rect.top;
+
     // canvas座標をCAD座標に変換
     const cadCoordinates = camera.toCAD(canvasX, canvasY);
 
@@ -465,6 +464,8 @@ canvas.addEventListener('mousedown', (event) => {
     .then(data => {
         if (data.status === 'success') {
             isDraggingPoint = true;
+            selectedPointId = data.selected_shape.id;
+            console.log(data);
         }
     });
   }
@@ -529,20 +530,25 @@ canvas.addEventListener('mousemove', (event) => {
 
   // 点をドラッグしているとき
   if (isDraggingPoint) {
-    // 選択された点を移動する処理をここに書く
+    // 新しい点の座標と目標とする点のIDを送信する
+    const newPoint = { x: cadCoordinates.x, y: cadCoordinates.y };
+    const targetPointId = selectedPointId;  // 選択された点のID
 
-    // Canvas座標系上でのマウスの移動量
-    const dxCanvas = canvasX - lastMousePosition.x;
-    const dyCanvas = canvasY - lastMousePosition.y;
-
-    // CAD座標系上での移動量に変換
-    const movementCAD = camera.toCAD(-dxCanvas, -dyCanvas, true);
-
-    // 点を移動（拘束条件がある場合は、それに従って移動）
-    // この部分はバックエンドとの通信が必要かもしれません
-
-    // 最後に、現在のマウス位置を保存
-    lastMousePosition = currentMousePosition;
+    fetch('/move_point', {
+      method: 'POST',
+      body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        console.log('move_point:', data);
+        draw();
+        // 最適化が成功した場合の処理（例：点の座標を更新）
+      } else {
+        // 最適化が失敗した場合の処理
+      }
+    });
   }
 
 
