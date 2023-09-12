@@ -244,3 +244,6 @@ def apply_fixed_length_constraint():
         # 拘束条件を適用した後の図形データをフロントエンドに送り返す
         return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
 
+    else:
+        return jsonify({'status': 'unknown shape type'})
+
