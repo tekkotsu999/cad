@@ -37,6 +37,11 @@ class ShapeManager:
         for shape in self.shapes:
             if shape.is_selected:  # 選択状態を確認
                 return shape  # 選択状態にあるshapeを返す
+            elif isinstance(shape, Line):  # shapeがLineオブジェクトの場合
+                if shape.p1.is_selected:  # 端点p1が選択状態か確認
+                    return shape.p1  # 端点p1を返す
+                elif shape.p2.is_selected:  # 端点p2が選択状態か確認
+                    return shape.p2  # 端点p2を返す
         return None  # 選択状態にあるshapeがない場合はNoneを返す
 
     # 最適化計算の後、self.shapesを更新する
