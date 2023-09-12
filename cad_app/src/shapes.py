@@ -7,13 +7,15 @@ class ShapeManager:
 
     def add_shape(self, shape_type, coordinates):
         if shape_type == 'Point':
-            point = Point(coordinates['x'], coordinates['y'])
-            self.shapes.append(point)
+            added_point = Point(coordinates['x'], coordinates['y'])
+            self.shapes.append(added_point)
+            return added_point
         elif shape_type == 'Line':
             p1 = Point(coordinates['p1']['x'], coordinates['p1']['y'])
             p2 = Point(coordinates['p2']['x'], coordinates['p2']['y'])
-            line = Line(p1, p2)
-            self.shapes.append(line)
+            added_line = Line(p1, p2)
+            self.shapes.append(added_line)
+            return added_line
 
     def get_shapes(self):
         return self.shapes
@@ -108,8 +110,8 @@ class Line(Shape):
             'shape_type': 'Line',
             'id': self.id,
             'coordinates': {
-                'p1': {'x': self.p1.x, 'y': self.p1.y},
-                'p2': {'x': self.p2.x, 'y': self.p2.y}
+                'p1': self.p1.to_json(),
+                'p2': self.p2.to_json()
             },
             'is_selected': self.is_selected
         }

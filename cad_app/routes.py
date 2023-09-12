@@ -34,15 +34,9 @@ def add_shape():
     shape_type = data['shape_type']
     coordinates = data['coordinates']
 
-    shape_manager.add_shape(shape_type, coordinates)
+    added_shape = shape_manager.add_shape(shape_type, coordinates)
 
-    # フロントエンドに送り返すデータ
-    # ※このデータはフロントエンドでは使用していない（今のところ）
-    response_data = {
-        'shape': shape_type,
-        'coordinates': coordinates
-    }
-    return jsonify(response_data)
+    return jsonify({'status': 'success', 'added_shape': added_shape.to_json()})
 
 # ---------------------------------------------------------------
 # 全ての図形を取得するためのルート
@@ -65,27 +59,47 @@ def select_shape():
         if isinstance(shape, Point):
             distance = math.sqrt((shape.x - click_x)**2 + (shape.y - click_y)**2)
             if distance <= tolerance:
-
                 # 全てのshapeのis_selectedをリセット
                 for shape_tmp in shape_manager.get_shapes():
                     shape_tmp.is_selected = False
+                    if isinstance(shape_tmp, Line):
+                        shape_tmp.p1.is_selected = False
+                        shape_tmp.p2.is_selected = False
 
                 shape.is_selected = True
                 return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
-
-    # 線の選択
+    
+    # 線の選択と端点の選択
     for shape in shape_manager.get_shapes():
         if isinstance(shape, Line):
-            # 線とクリック位置との距離を計算（実装が必要）
-            distance = calculate_line_distance(shape, click_x, click_y)
-            if distance <= tolerance:
+            # 線とクリック位置との距離を計算
+            distance_line = calculate_line_distance(shape, click_x, click_y)
+            
+            # 線の両端点とクリック位置との距離を計算
+            distance_p1 = math.sqrt((shape.p1.x - click_x)**2 + (shape.p1.y - click_y)**2)
+            distance_p2 = math.sqrt((shape.p2.x - click_x)**2 + (shape.p2.y - click_y)**2)
 
+            # 線または端点がクリックされたかどうかの判定
+            if distance_line < tolerance or distance_p1 < tolerance or distance_p2 < tolerance:
                 # 全てのshapeのis_selectedをリセット
                 for shape_tmp in shape_manager.get_shapes():
                     shape_tmp.is_selected = False
+                    if isinstance(shape_tmp, Line):
+                        shape_tmp.p1.is_selected = False
+                        shape_tmp.p2.is_selected = False
+                
+                # 端点が選択された場合
+                if distance_p1 < tolerance:
+                    shape.p1.is_selected = True
+                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+                if distance_p2 < tolerance:
+                    shape.p2.is_selected = True
+                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
 
-                shape.is_selected = True
-                return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})
+                # 線自体が選択された場合
+                if distance_line < tolerance:
+                    shape.is_selected = True
+                    return jsonify({'status': 'success', 'selected_shape': shape_to_dict(shape)})              
 
     return jsonify({'status': 'no_shape_selected'})
 

@@ -128,24 +128,54 @@ function drawShapesFromCache() {
 
   // shapesCacheに格納されているshapeを全て描画
   shapesCache.forEach(shape => {
-    // 描画色を設定（選択されている場合は水色、それ以外は黒）
-    ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
-    ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
 
     if (shape.shape_type === 'Point') {
       // 点を描画
+
+      // 描画色を設定（選択されている場合は水色、それ以外は黒）
+      ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
+      ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
+
       const canvasCoordinates = camera.toCanvas(shape.coordinates.x, shape.coordinates.y);
       ctx.beginPath();
       ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
       ctx.fill();
+
     } else if (shape.shape_type === 'Line') {
       // 線を描画
-      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.x, shape.coordinates.p1.y);
-      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.x, shape.coordinates.p2.y);
+
+      // 描画色を設定（選択されている場合は水色、それ以外は黒）
+      ctx.fillStyle = shape.is_selected ? 'lightblue' : 'black';
+      ctx.strokeStyle = shape.is_selected ? 'lightblue' : 'black';
+
+      const p1CanvasCoordinates = camera.toCanvas(shape.coordinates.p1.coordinates.x, shape.coordinates.p1.coordinates.y);
+      const p2CanvasCoordinates = camera.toCanvas(shape.coordinates.p2.coordinates.x, shape.coordinates.p2.coordinates.y);
       ctx.beginPath();
       ctx.moveTo(p1CanvasCoordinates.x, p1CanvasCoordinates.y);
       ctx.lineTo(p2CanvasCoordinates.x, p2CanvasCoordinates.y);
       ctx.stroke();
+
+      // p1が選択されていた場合は、p1を水色で描画
+      if(shape.coordinates.p1.is_selected){
+        ctx.fillStyle = 'lightblue';
+        ctx.strokeStyle =  'lightblue';
+        const canvasCoordinates = camera.toCanvas(shape.coordinates.p1.coordinates.x, shape.coordinates.p1.coordinates.y);
+        ctx.beginPath();
+        ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // p2が選択されていた場合は、p2を水色で描画
+      if(shape.coordinates.p2.is_selected){
+        ctx.fillStyle = 'lightblue';
+        ctx.strokeStyle =  'lightblue';
+        const canvasCoordinates = camera.toCanvas(shape.coordinates.p2.coordinates.x, shape.coordinates.p2.coordinates.y);
+        ctx.beginPath();
+        ctx.arc(canvasCoordinates.x, canvasCoordinates.y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+
     }
     // 他の図形の描画もここに追加できます
   });
@@ -249,6 +279,12 @@ function sendShapeToBackend(shape_type, cadCoordinates) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ shape_type: shape_type, coordinates: cadCoordinates }),
+    })
+    .then(response => response.json())
+    .then(data => {            
+        if (data.status === 'success') {
+            console.log("shape added:", data);
+        }
     });
 }
 
@@ -267,17 +303,6 @@ function changeMode(newMode) {
 }
 
 // **************************************************************
-
-// DPIから変換率を計算
-//var dpr = window.devicePixelRatio || 1;
-//console.log("dpr=",dpr);
-
-// 96DPIは、基準解像度
-// 基準解像度に、dprを掛け合わせることで、「１インチあたりの物理ピクセル数」を計算できる
-// 例えば、高解像度デバイスを使っていてdpr=1.25の場合、1インチあたり120(=96*125)物理ピクセルになる
-// var dpi = dpr * 96;
-
-//console.log("script.js was started.#1");
 
 // 現在アクティブなボタンを保持（初期状態は、Select mode）
 let activeButton = document.getElementById(`select_mode_Button`);
@@ -563,87 +588,3 @@ document.getElementById("apply-fixed-length-constraint").addEventListener("click
         }
     });
 });
-
-// **************************************************************
-
-// 初期データ（CAD座標系で定義）
-//let data = {
-//    a: {x: 300, y: 300},
-//    b: {x: 300, y: 500},
-//    c: {x: 500, y: 400},
-//    d: {x: 500, y: 300},
-//    displacement: [0, 0]
-//};
-
-// マウスの動きを検出
-//canvas.addEventListener('mousemove', (event) => {
-//    // マウスの座標を取得
-//    let mouseX = event.clientX - canvas.offsetLeft;
-//    let mouseY = event.clientY - canvas.offsetTop;
-//
-//    // 座標変換を適用
-//    let { x : transformed_mouse_x, y : transformed_mouse_y } = transformCoordinatesToCAD(mouseX, mouseY);
-//
-//    // c点とマウスカーソルの位置との相対位置を計算
-//    data.displacement[0] = transformed_mouse_x - data.c.x;
-//    data.displacement[1] = transformed_mouse_y - data.c.y;
-//    // console.log( data.displacement[0] );
-//    // console.log( data.displacement[1] );
-//
-//    // /optimize エンドポイントにデータを送信
-//    fetch('/optimize', {
-//        method: 'POST',
-//        headers: { 'Content-Type': 'application/json' },
-//        body: JSON.stringify(data)
-//    })
-//    .then(response => response.json())
-//    .then(r_data => {
-//        // 最適化後の新しい座標を取得
-//        let newCoordinates = r_data;
-//
-//        // canvasをクリア
-//        ctx.clearRect(0, 0, canvas.width, canvas.height);
-//        
-//        // canvas座標系に変換
-//        let transformed_newCoordinates = {
-//            a : transformCoordinatesToCanvas( newCoordinates.a.x, newCoordinates.a.y ),
-//            b : transformCoordinatesToCanvas( newCoordinates.b.x, newCoordinates.b.y ),
-//            c : transformCoordinatesToCanvas( newCoordinates.c.x, newCoordinates.c.y ),
-//            d : transformCoordinatesToCanvas( newCoordinates.d.x, newCoordinates.d.y )
-//        };
-//        // console.log(transformed_newCoordinates)
-//
-//        // 新しい座標をcanvasに描画
-//        ctx.beginPath();
-//        ctx.moveTo( transformed_newCoordinates.a.x, transformed_newCoordinates.a.y);
-//        ctx.lineTo( transformed_newCoordinates.b.x, transformed_newCoordinates.b.y);
-//        ctx.lineTo( transformed_newCoordinates.c.x, transformed_newCoordinates.c.y);
-//        ctx.lineTo( transformed_newCoordinates.d.x, transformed_newCoordinates.d.y);
-//        ctx.lineTo( transformed_newCoordinates.a.x, transformed_newCoordinates.a.y);
-//        ctx.stroke();
-//    })
-//    .catch((error) => {
-//        console.error('Error:', error);
-//    });
-//});
-
-// CAD座標系に座標変換する関数
-//function transformCoordinatesToCAD(x, y) {
-//  // console.log("x=", x );
-//  // console.log("y=", y);
-//
-//  // ここで座標変換のロジックを実装
-//  let transformed_x = x / 2; // 例: x座標を半分に
-//  let transformed_y = y / 2; // 例: y座標を半分に
-//  // console.log("transformed_x=", transformed_x);
-//  // console.log("transformed_y=", transformed_y);
-//
-//  return { x : transformed_x, y : transformed_y };
-//}
-
-// Canvas座標系に座標変換する関数
-//function transformCoordinatesToCanvas(x, y) {
-//  let transformed_x = x * 2; // 例: x座標を2倍
-//  let transformed_y = y * 2; // 例: y座標を2倍
-//  return { x : transformed_x, y : transformed_y };
-//}
