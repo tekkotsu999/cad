@@ -15,7 +15,7 @@ class ConstraintManager:
         self.constraints.append(constraint)
 
     def apply_constraints(self, initial_points, new_point=None, target_point_id=None):
-        start_time = time.time()
+
 
         # print('initial_points:',initial_points)
         # print('new_point:',new_point)
@@ -25,7 +25,11 @@ class ConstraintManager:
         initial_points_flat = []
         id_to_index = {}  # IDとindexのマッピング
         for i, point in enumerate(initial_points):
-            initial_points_flat.extend([point.x, point.y])
+            if point.id == target_point_id:
+                # target pointだけ、初期値をtarget pointの位置に近づけておく（高速化目的）
+                initial_points_flat.extend([new_point['x'], new_point['y']])
+            else:
+                initial_points_flat.extend([point.x, point.y])
             id_to_index[point.id] = i  # IDに対応するindexを保存
         initial_points_flat = np.array(initial_points_flat)
         # print('initial_points_flat:',initial_points_flat)
@@ -62,13 +66,13 @@ class ConstraintManager:
         if new_point is None or target_point_id is None:
             res = minimize(target_distance_without_new_point, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
         else:
-            # print(time.time()-start_time)
+            start_time = time.time()
             res = minimize(
                 target_distance,
                 initial_points_flat,
                 constraints = constraints_for_optimization,
                 method='SLSQP')
-            # print(time.time()-start_time)
+            print('minimize:', time.time()-start_time)
 
         # print(res.message)
         

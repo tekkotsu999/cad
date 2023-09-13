@@ -143,6 +143,9 @@ request_id = 0
 
 @app.route('/move_point', methods=['POST'])
 def move_point():
+    # 処理開始時間を記録
+    start_time = time.time()
+
     global last_processed_request_id
     global request_id
     
@@ -167,14 +170,8 @@ def move_point():
     
     #print(f"* start req: {request_id}")
 
-    # 処理開始時間を記録
-    start_time = time.time()
-
     # 拘束条件をを適用
     updated_points = constraint_manager.apply_constraints(points, new_point, target_point_id)
-    
-    # 処理終了時間を記録
-    end_time = time.time()
 
     # その結果でshape_manager.shapesを更新する
     shape_manager.update_shapes(updated_points)
@@ -184,6 +181,9 @@ def move_point():
 
     # 最後に処理されたリクエストのIDを更新
     last_processed_request_id = request_id
+
+    # 処理終了時間を記録
+    end_time = time.time()
 
     # 処理時間を計算
     elapsed_time = end_time - start_time
