@@ -109,7 +109,7 @@ function getShapesFromBackend() {
     .then(data => {
       shapesCache = data; // ローカルキャッシュに保存
       drawShapesFromCache(); // キャッシュから描画
-      console.log('shapesCache:', shapesCache);
+      // console.log('shapesCache:', shapesCache);
     });
 }
 
@@ -542,7 +542,7 @@ canvas.addEventListener('mousemove', (event) => {
     .then(response => response.json())
     .then(data => {
       if (data.status === 'success') {
-        console.log('move_point:', data);
+        //console.log('move_point:', data);
         draw();
         // 最適化が成功した場合の処理（例：点の座標を更新）
       } else {

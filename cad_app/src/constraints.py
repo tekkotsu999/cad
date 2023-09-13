@@ -15,23 +15,40 @@ class ConstraintManager:
 
     def apply_constraints(self, initial_points, new_point=None, target_point_id=None):
         
-        print('initial_points:',initial_points)
+        # print('initial_points:',initial_points)
+        # print('new_point:',new_point)
+        # print('target_point_id:',target_point_id)
 
         # Flatten the points for optimization
         initial_points_flat = []
-        for point in initial_points:
+        id_to_index = {}  # IDとindexのマッピング
+        for i, point in enumerate(initial_points):
             initial_points_flat.extend([point.x, point.y])
+            id_to_index[point.id] = i  # IDに対応するindexを保存
         initial_points_flat = np.array(initial_points_flat)
-        
+        # print('initial_points_flat:',initial_points_flat)
+        # print('id_to_index')
+
+        # 目的関数の定義
+        def target_distance(initial_points_flat):
+            if new_point is None or target_point_id is None:
+                return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
+            # target_point_idに対応するindexを取得
+            target_index = id_to_index.get(target_point_id, None)
+            if target_index is not None:
+                target_x, target_y = initial_points_flat[2*target_index], initial_points_flat[2*target_index + 1]
+                return math.sqrt((new_point['x'] - target_x)**2 + (new_point['y'] - target_y)**2)
+
         # Convert constraints to format suitable for scipy's minimize function
         # argsフィールドを使用して、original_pointsを制約関数に渡す  
         constraints_for_optimization = []
         for c in self.constraints:
             constraint_dict = {'type': 'eq', 'fun': c, 'args': (initial_points,)}
             constraints_for_optimization.append(constraint_dict)
-        
+
+        print('optimization start.')
         # Use 'SLSQP' method as it supports equality constraints
-        res = minimize(self.target_distance, initial_points_flat, args=(initial_points, new_point, target_point_id), constraints = constraints_for_optimization, method='SLSQP')
+        res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
         print(res.message)
         
         # Check if the optimizer has converged
@@ -48,21 +65,10 @@ class ConstraintManager:
             updated_point.id = original_point.id  # 元のPointオブジェクトからidをコピー
             updated_points.append(updated_point)
         
-        print('updated_points:',updated_points)
+        # print('updated_points:',updated_points)
         return updated_points
     
     
-    def target_distance(self, initial_points_flat, initial_points, new_point, target_point_id):
-        if new_point is None or target_point_id is None:
-            return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
-
-        # target_point_idに対応する点とnew_pointとの距離を計算
-        target_point = next((point for point in initial_points if point.id == target_point_id), None)
-        if target_point:
-            print(math.sqrt((new_point['x'] - target_point.x)**2 + (new_point['y'] - target_point.y)**2))
-            return math.sqrt((new_point['x'] - target_point.x)**2 + (new_point['y'] - target_point.y)**2)
-
-        return float('inf')  # IDが一致する点がない場合、無限大を返す
 
 # -----------------------------------------------------------------------
 # FixedPointConstraintクラスは、ある点が固定されていることを表現する
