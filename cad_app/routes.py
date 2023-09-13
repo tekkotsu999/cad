@@ -1,6 +1,7 @@
 from flask import render_template
 from . import app  # __init__.pyからFlaskアプリケーションインスタンスをインポート
 import math
+import time  # 時間計測用
 
 from flask import jsonify, request
 # from .src.optimize import run_optimization
@@ -136,18 +137,44 @@ def calculate_line_distance(line, click_x, click_y):
     return distance
 
 # ---------------------------------------------------------------
+# 最後に処理されたリクエストのID
+last_processed_request_id = 0
+request_id = 0
+
 @app.route('/move_point', methods=['POST'])
 def move_point():
+    global last_processed_request_id
+    global request_id
+    
+    # これから処理するrequest_id
+    request_id = request_id + 1
+
     # フロントエンドから送られてくるデータを取得
     data = request.json
     new_point = data.get('new_point')
     target_point_id = data.get('target_point_id')
+    # request_id = data.get('request_id')  # 一意のリクエストID
+
+    #print('* last req:',last_processed_request_id)
+    #print('* new req:',request_id)
+    # 古いリクエストを無視
+    if request_id - 1 > last_processed_request_id:
+        print('Ignored. request_id :',request_id)
+        return jsonify({"status": "ignored"})
 
     # ShapeManagerから現在の全ての点を取得
     points = shape_manager.get_points()
+    
+    #print(f"* start req: {request_id}")
+
+    # 処理開始時間を記録
+    start_time = time.time()
 
     # 拘束条件をを適用
     updated_points = constraint_manager.apply_constraints(points, new_point, target_point_id)
+
+    # 処理終了時間を記録
+    end_time = time.time()
 
     # その結果でshape_manager.shapesを更新する
     shape_manager.update_shapes(updated_points)
@@ -155,10 +182,26 @@ def move_point():
     shapes_data = [shape.to_json() for shape in shape_manager.shapes]
     constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
 
+    # 最後に処理されたリクエストのIDを更新
+    last_processed_request_id = request_id
+
+    # 処理時間を計算
+    elapsed_time = end_time - start_time
+
+    # 処理時間とリクエストIDをログに出力
+    print(f"* done req: {request_id}, Elapsed Time: {elapsed_time} seconds")
+
     # 拘束条件を適用した後の図形データをフロントエンドに送り返す
     return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
 
 
+@app.route('/reset_request_id', methods=['POST'])
+def reset_request_id():
+    global last_processed_request_id
+    global request_id
+    last_processed_request_id = 0
+    request_id = 0
+    return jsonify({'status': 'success'})
 
 # ---------------------------------------------------------------
 # "Apply FixedPointConstraint" ボタンがクリックされたときの処理

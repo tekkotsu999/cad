@@ -483,6 +483,26 @@ canvas.addEventListener('mouseup', (event) => {
   }
   if (event.button === 2) { // 右クリック
     isDraggingPoint = false;
+    requestId = 0;
+    
+    // バックエンドにリクエストidをリセットするリクエストを送る
+    fetch("/reset_request_id", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})  // 任意のデータを送る場合はここに記述
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            console.log('reset_request_id:', data);
+            draw();
+        } else {
+            // 失敗した場合の処理（例：エラーメッセージの表示）
+        }
+    });
+
   }
 
 });
@@ -490,6 +510,8 @@ canvas.addEventListener('mouseup', (event) => {
 // ------------------------------------------------------------------------
 // mousemove
 // 画面の平行移動時と、線の描画時
+let requestId = 0;  // リクエストIDの初期値
+
 canvas.addEventListener('mousemove', (event) => {
   // canvasの絶対位置を取得
   const rect = canvas.getBoundingClientRect();
@@ -530,24 +552,26 @@ canvas.addEventListener('mousemove', (event) => {
 
   // 点をドラッグしているとき
   if (isDraggingPoint) {
+    requestId++;  // リクエストIDをインクリメント
+    console.log(requestId);
+
     // 新しい点の座標と目標とする点のIDを送信する
     const newPoint = { x: cadCoordinates.x, y: cadCoordinates.y };
     const targetPointId = selectedPointId;  // 選択された点のID
 
     fetch('/move_point', {
       method: 'POST',
-      body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId }),
+      body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId, request_id: requestId}),
       headers: { 'Content-Type': 'application/json' }
     })
     .then(response => response.json())
     .then(data => {
-      if (data.status === 'success') {
-        //console.log('move_point:', data);
-        draw();
-        // 最適化が成功した場合の処理（例：点の座標を更新）
-      } else {
-        // 最適化が失敗した場合の処理
-      }
+        if (data.status === 'success') {
+            draw();
+            console.log('responce',requestId);
+        } else if (data.status === 'ignored') {
+            console.log('このリクエストは無視されました');
+        }
     });
   }
 

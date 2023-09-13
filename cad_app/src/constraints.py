@@ -2,6 +2,7 @@ import numpy as np
 import uuid  # 一意なIDを生成するためのモジュール
 from scipy.optimize import minimize
 import math
+import time  # 時間計測用
 
 from .shapes import *
 
@@ -14,7 +15,8 @@ class ConstraintManager:
         self.constraints.append(constraint)
 
     def apply_constraints(self, initial_points, new_point=None, target_point_id=None):
-        
+        start_time = time.time()
+
         # print('initial_points:',initial_points)
         # print('new_point:',new_point)
         # print('target_point_id:',target_point_id)
@@ -28,16 +30,24 @@ class ConstraintManager:
         initial_points_flat = np.array(initial_points_flat)
         # print('initial_points_flat:',initial_points_flat)
         # print('id_to_index')
-
+        
+        target_index = id_to_index.get(target_point_id, None)
         # 目的関数の定義
+#         def target_distance(initial_points_flat):
+#             #print(time.time())
+#             #if new_point is None or target_point_id is None:
+#             #    return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
+#             target_x, target_y = initial_points_flat[2*target_index], initial_points_flat[2*target_index + 1]
+#             return (new_point['x'] - target_x)**2 + (new_point['y'] - target_y)**2
+
+        # target_indexは事前に計算
+        target_index_x = 2 * target_index
+        target_index_y = 2 * target_index + 1
         def target_distance(initial_points_flat):
-            if new_point is None or target_point_id is None:
-                return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
-            # target_point_idに対応するindexを取得
-            target_index = id_to_index.get(target_point_id, None)
-            if target_index is not None:
-                target_x, target_y = initial_points_flat[2*target_index], initial_points_flat[2*target_index + 1]
-                return math.sqrt((new_point['x'] - target_x)**2 + (new_point['y'] - target_y)**2)
+            return (new_point['x'] - initial_points_flat[target_index_x])**2 + (new_point['y'] - initial_points_flat[target_index_y])**2
+
+        def target_distance_without_new_point(initial_points_flat):
+            return 0
 
         # Convert constraints to format suitable for scipy's minimize function
         # argsフィールドを使用して、original_pointsを制約関数に渡す  
@@ -46,10 +56,17 @@ class ConstraintManager:
             constraint_dict = {'type': 'eq', 'fun': c, 'args': (initial_points,)}
             constraints_for_optimization.append(constraint_dict)
 
-        print('optimization start.')
+        # print('optimization start.')
         # Use 'SLSQP' method as it supports equality constraints
-        res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
-        print(res.message)
+        # res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+        if new_point is None or target_point_id is None:
+            res = minimize(target_distance_without_new_point, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+        else:
+            # print(time.time()-start_time)
+            res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+            # print(time.time()-start_time)
+
+        # print(res.message)
         
         # Check if the optimizer has converged
         if not res.success:
