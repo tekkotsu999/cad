@@ -33,7 +33,7 @@ class ConstraintManager:
         
         target_index = id_to_index.get(target_point_id, None)
 
-        # 事前計算
+        # 目的関数の事前計算（高速化目的）
         if target_index is not None:
             target_index_x = 2 * target_index
             target_index_y = 2 * target_index + 1
@@ -51,8 +51,9 @@ class ConstraintManager:
         # Convert constraints to format suitable for scipy's minimize function
         # argsフィールドを使用して、original_pointsを制約関数に渡す  
         constraints_for_optimization = []
-        for c in self.constraints:
-            constraint_dict = {'type': 'eq', 'fun': c, 'args': (initial_points,)}
+        for constraint in self.constraints:
+            constraint.get_target_index(initial_points)     # constraintを定義している点に対するindexを更新する（内部に持っているpointのidでindexを特定する）
+            constraint_dict = {'type': 'eq', 'fun': constraint}
             constraints_for_optimization.append(constraint_dict)
 
         # print('optimization start.')
@@ -100,16 +101,16 @@ class FixedPointConstraint:
         self.fixed_x = fixed_x
         self.fixed_y = fixed_y
 
-    def __call__(self, points_flat, original_points):
+    # constraintを定義している点に対するindexを更新する（内部に持っているpointのidでindexを特定する）
+    def get_target_index(self, original_points):
         id_to_index = {p.id: i for i, p in enumerate(original_points)}
-        target_index = id_to_index.get(self.fixed_point_id, None)
-        
-        if target_index is not None:
-            dx = points_flat[2 * target_index] - self.fixed_x
-            dy = points_flat[2 * target_index + 1] - self.fixed_y
-            return dx**2 + dy**2  # 平方根を取る必要はない
-        else:
-            return 0
+        self.target_index_x = id_to_index.get(self.fixed_point_id) * 2
+        self.target_index_y = self.target_index_x + 1
+        return self.target_index_x, self.target_index_y
+
+    def __call__(self, points_flat):
+        # 高速化のため平方根は取らない
+        return (points_flat[self.target_index_x] - self.fixed_x)**2 + (points_flat[self.target_index_y] - self.fixed_y)**2
 
     def to_json(self):
         return {
@@ -125,19 +126,20 @@ class FixedLengthConstraint:
         self.id = str(uuid.uuid4())
         self.point1_id = point1_id
         self.point2_id = point2_id
-        self.length2 = length**2
-
-    def __call__(self, points_flat, original_points):
+        self.length2 = length ** 2
+    
+    # constraintを定義している点に対するindexを更新する（内部に持っているpointのidでindexを特定する）
+    def get_target_index(self, original_points):
         id_to_index = {p.id: i for i, p in enumerate(original_points)}
-        index1 = id_to_index.get(self.point1_id, None)
-        index2 = id_to_index.get(self.point2_id, None)
-        
-        if index1 is not None and index2 is not None:
-            dx = points_flat[2 * index1] - points_flat[2 * index2]
-            dy = points_flat[2 * index1 + 1] - points_flat[2 * index2 + 1]
-            return dx**2 + dy**2 - self.length2  # 平方根を取る必要はない
-        else:
-            return 0
+        self.point1_index_x = id_to_index.get(self.point1_id) * 2
+        self.point1_index_y = self.point1_index_x + 1
+        self.point2_index_x = id_to_index.get(self.point2_id) * 2
+        self.point2_index_y = self.point2_index_x + 1
+        return self.point1_index_x, self.point1_index_y, self.point2_index_x, self.point2_index_y
+
+    def __call__(self, points_flat):
+        # 高速化のため平方根は取らない
+        return (points_flat[self.point1_index_x] - points_flat[self.point2_index_x])**2 + (points_flat[self.point1_index_y] - points_flat[self.point2_index_y])**2 - self.length2
 
     def to_json(self):
         return {
