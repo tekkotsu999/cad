@@ -108,6 +108,11 @@ class Line(Shape):
     def length(self):
         return np.sqrt((self.p1.x - self.p2.x) ** 2 + (self.p1.y - self.p2.y) ** 2)
 
+    # Lineインスタンスの長さを計算するメソッド
+    @property
+    def length2(self):
+        return (self.p1.x - self.p2.x) ** 2 + (self.p1.y - self.p2.y) ** 2
+
     def __repr__(self):
         return f"Line(id={self.id}, p1={self.p1}, p2={self.p2}], "
 

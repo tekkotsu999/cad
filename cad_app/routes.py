@@ -172,7 +172,7 @@ def move_point():
 
     # 拘束条件をを適用
     updated_points = constraint_manager.apply_constraints(points, new_point, target_point_id)
-
+    
     # 処理終了時間を記録
     end_time = time.time()
 

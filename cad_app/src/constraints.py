@@ -32,19 +32,18 @@ class ConstraintManager:
         # print('id_to_index')
         
         target_index = id_to_index.get(target_point_id, None)
-        # 目的関数の定義
-#         def target_distance(initial_points_flat):
-#             #print(time.time())
-#             #if new_point is None or target_point_id is None:
-#             #    return 0  # new_pointとtarget_point_idがNoneの場合、常に0を返す
-#             target_x, target_y = initial_points_flat[2*target_index], initial_points_flat[2*target_index + 1]
-#             return (new_point['x'] - target_x)**2 + (new_point['y'] - target_y)**2
 
-        # target_indexは事前に計算
-        target_index_x = 2 * target_index
-        target_index_y = 2 * target_index + 1
+        # 事前計算
+        if target_index is not None:
+            target_index_x = 2 * target_index
+            target_index_y = 2 * target_index + 1
+            new_x = new_point['x']
+            new_y = new_point['y']
+
+        # 目的関数の定義
         def target_distance(initial_points_flat):
-            return (new_point['x'] - initial_points_flat[target_index_x])**2 + (new_point['y'] - initial_points_flat[target_index_y])**2
+            # print(time.time()-start_time)
+            return (new_x - initial_points_flat[target_index_x])**2 + (new_y - initial_points_flat[target_index_y])**2
 
         def target_distance_without_new_point(initial_points_flat):
             return 0
@@ -63,7 +62,11 @@ class ConstraintManager:
             res = minimize(target_distance_without_new_point, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
         else:
             # print(time.time()-start_time)
-            res = minimize(target_distance, initial_points_flat, constraints = constraints_for_optimization, method='SLSQP')
+            res = minimize(
+                target_distance,
+                initial_points_flat,
+                constraints = constraints_for_optimization,
+                method='SLSQP')
             # print(time.time()-start_time)
 
         # print(res.message)
@@ -98,14 +101,15 @@ class FixedPointConstraint:
         self.fixed_y = fixed_y
 
     def __call__(self, points_flat, original_points):
-        points = [Point(points_flat[i], points_flat[i+1]) for i in range(0, len(points_flat), 2)]
-        for i, p in enumerate(original_points):
-            points[i].id = p.id  # 元のPointオブジェクトからidをコピー
-
-        point = next(p for p in points if p.id == self.fixed_point_id)
-        dx = point.x - self.fixed_x
-        dy = point.y - self.fixed_y
-        return np.sqrt(dx**2 + dy**2)
+        id_to_index = {p.id: i for i, p in enumerate(original_points)}
+        target_index = id_to_index.get(self.fixed_point_id, None)
+        
+        if target_index is not None:
+            dx = points_flat[2 * target_index] - self.fixed_x
+            dy = points_flat[2 * target_index + 1] - self.fixed_y
+            return dx**2 + dy**2  # 平方根を取る必要はない
+        else:
+            return 0
 
     def to_json(self):
         return {
@@ -121,24 +125,19 @@ class FixedLengthConstraint:
         self.id = str(uuid.uuid4())
         self.point1_id = point1_id
         self.point2_id = point2_id
-        self.length = length
+        self.length2 = length**2
 
     def __call__(self, points_flat, original_points):
-        # points_flatからPointオブジェクトのリストを生成
-        points = [Point(points_flat[i], points_flat[i+1]) for i in range(0, len(points_flat), 2)]
+        id_to_index = {p.id: i for i, p in enumerate(original_points)}
+        index1 = id_to_index.get(self.point1_id, None)
+        index2 = id_to_index.get(self.point2_id, None)
         
-        # unique_idを元のPointオブジェクトからコピー
-        for i, p in enumerate(original_points):
-            points[i].id = p.id
-
-        # unique_idを使って、対象となるPointオブジェクトを見つける
-        point1 = next(p for p in points if p.id == self.point1_id)
-        point2 = next(p for p in points if p.id == self.point2_id)
-
-        # 点間の距離を計算
-        dx = point1.x - point2.x
-        dy = point1.y - point2.y
-        return np.sqrt(dx**2 + dy**2) - self.length
+        if index1 is not None and index2 is not None:
+            dx = points_flat[2 * index1] - points_flat[2 * index2]
+            dy = points_flat[2 * index1 + 1] - points_flat[2 * index2 + 1]
+            return dx**2 + dy**2 - self.length2  # 平方根を取る必要はない
+        else:
+            return 0
 
     def to_json(self):
         return {
