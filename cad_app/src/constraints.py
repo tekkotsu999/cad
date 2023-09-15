@@ -15,8 +15,6 @@ class ConstraintManager:
         self.constraints.append(constraint)
 
     def apply_constraints(self, initial_points, new_point=None, target_point_id=None):
-
-
         # print('initial_points:',initial_points)
         # print('new_point:',new_point)
         # print('target_point_id:',target_point_id)
