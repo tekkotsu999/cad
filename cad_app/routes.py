@@ -35,9 +35,10 @@ def add_shape():
     shape_type = data['shape_type']
     coordinates = data['coordinates']
 
-    added_shape = shape_manager.add_shape(shape_type, coordinates)
+    shape_manager.add_shape(shape_type, coordinates)
+    shapes_data = [shape.to_json() for shape in shape_manager.shapes]
 
-    return jsonify({'status': 'success', 'added_shape': added_shape.to_json()})
+    return jsonify({'status': 'success', 'shapes_data': shapes_data} )
 
 # ---------------------------------------------------------------
 # 全ての図形を取得するためのルート
@@ -45,7 +46,7 @@ def add_shape():
 def get_shapes():
     shapes_data = [shape.to_json() for shape in shape_manager.shapes]
     # print("Shapes data:", shapes_data)
-    return jsonify(shapes_data)
+    return jsonify( shapes_data )
 
 # ---------------------------------------------------------------
 @app.route('/select_shape', methods=['POST'])

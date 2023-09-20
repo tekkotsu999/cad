@@ -104,8 +104,11 @@ function getShapesFromBackend() {
   //console.log("I'm in getShapesFromBackend()");
   //console.trace();
 
+  // fetch関数で非同期通信を行う
   fetch('/get_shapes')
+    // 通信が成功したら、レスポンスをJSON形式に変換
     .then(response => response.json())
+    // JSONデータを受け取った後の処理
     .then(data => {
       shapesCache = data; // ローカルキャッシュに保存
       drawShapesFromCache(); // キャッシュから描画
@@ -269,7 +272,7 @@ function displayCADCoordinates() {
 }
 
 
-function sendShapeToBackend(shape_type, cadCoordinates) {
+function addShape(shape_type, cadCoordinates) {
     //console.log("I'm in sendShapeToBackend()");
 
     // Ajaxを使用してバックエンドにPOSTリクエストを送信
@@ -283,6 +286,7 @@ function sendShapeToBackend(shape_type, cadCoordinates) {
     .then(response => response.json())
     .then(data => {            
         if (data.status === 'success') {
+            shapesCache = data.shapes_data
             console.log("shape added:", data);
         }
     });
@@ -374,10 +378,10 @@ canvas.addEventListener('click', (event) => {
 
     if (currentMode === 'point_mode') {
         // 点を描画する処理
-        sendShapeToBackend('Point', cadCoordinates);
+        addShape('Point', cadCoordinates);
         
         // 描画
-        draw();
+        drawShapesFromCache();
         
     } else if (currentMode === 'line_mode') {
         // 線を描画する処理
@@ -393,7 +397,7 @@ canvas.addEventListener('click', (event) => {
             //console.log("p2:",p2Point);
             
             // ここでバックエンドに線の始点と終点を送信
-            sendShapeToBackend('Line', {p1: p1Point, p2: p2Point});
+            addShape('Line', {p1: p1Point, p2: p2Point});
             
             // 始点と終点をリセット
             p1Point = null;
@@ -403,7 +407,7 @@ canvas.addEventListener('click', (event) => {
             isDrawingLine = false;
             
             // 描画
-            draw();
+            drawShapesFromCache();
         }
     } else if (currentMode === 'select_mode') {
         // 画面上での許容値（5pt）をCAD座標系に変換
