@@ -613,7 +613,7 @@ function sendPostRequest(newPoint, targetPointId, requestId) {
 }
 
 // debounce関数でラッピング
-const debouncedSendPostRequest = debounce(sendPostRequest, 50); // 50ms後にリクエストを送信
+const debouncedSendPostRequest = debounce(sendPostRequest, 10); // 10ms後にリクエストを送信
 
 
 
