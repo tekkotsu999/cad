@@ -542,21 +542,22 @@ canvas.addEventListener('mousemove', (event) => {
     const newPoint = { x: cadCoordinates.x, y: cadCoordinates.y };
     const targetPointId = selectedPointId;  // 選択された点のID
 
-    fetch('/move_point', {
-      method: 'POST',
-      body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId, request_id: requestId}),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            console.log('point moved:',requestId);
-            shapesCache = data.shapes_data;
-            drawShapesFromCache();
-        } else if (data.status === 'ignored') {
-            console.log('このリクエストは無視されました');
-        }
-    });
+    debouncedSendPostRequest(newPoint, targetPointId, requestId);
+//    fetch('/move_point', {
+//      method: 'POST',
+//      body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId, request_id: requestId}),
+//      headers: { 'Content-Type': 'application/json' }
+//    })
+//    .then(response => response.json())
+//    .then(data => {
+//        if (data.status === 'success') {
+//            console.log('point moved:',requestId);
+//            shapesCache = data.shapes_data;
+//            drawShapesFromCache();
+//        } else if (data.status === 'ignored') {
+//            console.log('このリクエストは無視されました');
+//        }
+//    });
   }
 
 
@@ -582,6 +583,39 @@ canvas.addEventListener('mousemove', (event) => {
   // 例: if (currentMode === 'select') { /* 選択モードでの処理 */ }
 
 });
+
+let timeoutID; // タイムアウトIDを保存する変数
+
+function debounce(func, wait) {
+  return function(...args) {
+    clearTimeout(timeoutID); // 既存のタイマーをクリア
+    timeoutID = setTimeout(() => func(...args), wait); // 新しいタイマーを設定
+  };
+}
+
+// POSTリクエストを送信する関数
+function sendPostRequest(newPoint, targetPointId, requestId) {
+  fetch('/move_point', {
+    method: 'POST',
+    body: JSON.stringify({ new_point: newPoint, target_point_id: targetPointId, request_id: requestId}),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          console.log('point moved:', requestId);
+          shapesCache = data.shapes_data;
+          drawShapesFromCache();
+      } else if (data.status === 'ignored') {
+          console.log('このリクエストは無視されました');
+      }
+  });
+}
+
+// debounce関数でラッピング
+const debouncedSendPostRequest = debounce(sendPostRequest, 50); // 50ms後にリクエストを送信
+
+
 
 // ------------------------------------------------------------------------
 // wheel
