@@ -82,24 +82,6 @@ class ModeManager {
 
 // =================================================================================
 
-// 再描画関数
-function draw() {
-  //console.log("I'm in draw().");
-
-  // バックエンドから全て図形情報を取得し、描画
-  getShapesFromBackend();
-
-}
-
-// 再描画関数（バックエンドからデータの取得なし）
-function draw_without_getShapesFromBackend() {
-  //console.log("I'm in draw_without_getShapesFromBackend().");
-
-  // キャッシュから描画（ちらつき防止）
-  drawShapesFromCache();
-
-}
-
 function getShapesFromBackend() {
   //console.log("I'm in getShapesFromBackend()");
   //console.trace();
@@ -335,8 +317,8 @@ let shapesCache = [];
 const mouseCoordinatesCanvasDiv = document.getElementById('mouse-coordinates-canvas');
 const mouseCoordinatesCadDiv = document.getElementById('mouse-coordinates-cad');
 
+drawShapesFromCache();
 //console.log("script.js was started.#2");
-draw();
 
 // **************************************************************
 // 以下、イベントリスナー
@@ -498,7 +480,7 @@ canvas.addEventListener('mouseup', (event) => {
     .then(data => {
         if (data.status === "success") {
             console.log('reset_request_id:', data);
-            draw();
+            drawShapesFromCache();
         } else {
             // 失敗した場合の処理（例：エラーメッセージの表示）
         }
