@@ -649,7 +649,8 @@ document.getElementById("apply-fixed-point-constraint").addEventListener("click"
     .then(data => {
         if (data.status === "success") {
             console.log('apply_fixed_point_constraint:', data);
-            draw();
+            shapesCache = data.shapes_data;
+            drawShapesFromCache();
         } else {
             // 失敗した場合の処理（例：エラーメッセージの表示）
         }
@@ -671,7 +672,8 @@ document.getElementById("apply-fixed-length-constraint").addEventListener("click
     .then(data => {
         if (data.status === "success") {
             console.log('apply_fixed_length_constraint:', data);
-            draw();
+            shapesCache = data.shapes_data;
+            drawShapesFromCache();
         } else {
             // 失敗した場合の処理（例：エラーメッセージの表示）
         }

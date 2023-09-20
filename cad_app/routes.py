@@ -240,7 +240,7 @@ def apply_fixed_point_constraint():
         constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
 
         # 拘束条件を適用した後の図形データをフロントエンドに送り返す
-        return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+        return jsonify({'status': 'success', 'shapes_data': shapes_data, 'constraints': constraints_data})
 
     elif isinstance(selected_shape, Line):
         # selected_shapeがLineオブジェクトの場合
@@ -264,7 +264,7 @@ def apply_fixed_point_constraint():
         constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
 
         # 拘束条件を適用した後の図形データをフロントエンドに送り返す
-        return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+        return jsonify({'status': 'success', 'shapes_data': shapes_data, 'constraints': constraints_data})
 
     else:
         return jsonify({'status': 'unknown shape type'})
@@ -308,7 +308,7 @@ def apply_fixed_length_constraint():
         constraints_data = [constraint.to_json() for constraint in constraint_manager.constraints]
 
         # 拘束条件を適用した後の図形データをフロントエンドに送り返す
-        return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+        return jsonify({'status': 'success', 'shapes_data': shapes_data, 'constraints': constraints_data})
 
     else:
         return jsonify({'status': 'unknown shape type'})
