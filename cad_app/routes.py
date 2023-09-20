@@ -70,7 +70,7 @@ def select_shape():
 
                 shape.is_selected = True
                 shapes_data = [shape.to_json() for shape in shape_manager.shapes]
-                return jsonify({'status': 'success', 'shapes_data': shapes_data })
+                return jsonify({'status': 'success','selected_shape': shape.to_json(), 'shapes_data': shapes_data })
     
     # 線の選択と端点の選択
     for shape in shape_manager.get_shapes():
@@ -95,17 +95,17 @@ def select_shape():
                 if distance_p1 < tolerance:
                     shape.p1.is_selected = True
                     shapes_data = [shape.to_json() for shape in shape_manager.shapes]
-                    return jsonify({'status': 'success', 'shapes_data': shapes_data })
+                    return jsonify({'status': 'success', 'selected_shape': shape.p1.to_json(), 'shapes_data': shapes_data })
                 if distance_p2 < tolerance:
                     shape.p2.is_selected = True
                     shapes_data = [shape.to_json() for shape in shape_manager.shapes]
-                    return jsonify({'status': 'success', 'shapes_data': shapes_data })
+                    return jsonify({'status': 'success', 'selected_shape': shape.p2.to_json(), 'shapes_data': shapes_data })
 
                 # 線自体が選択された場合
                 if distance_line < tolerance:
                     shape.is_selected = True
                     shapes_data = [shape.to_json() for shape in shape_manager.shapes]
-                    return jsonify({'status': 'success', 'shapes_data': shapes_data })
+                    return jsonify({'status': 'success', 'selected_shape': shape.to_json(), 'shapes_data': shapes_data })
 
     return jsonify({'status': 'no_shape_selected'})
 
@@ -197,7 +197,7 @@ def move_point():
     print(f"* done req: {request_id}, Elapsed Time: {elapsed_time} seconds")
 
     # 拘束条件を適用した後の図形データをフロントエンドに送り返す
-    return jsonify({'status': 'success', 'updated_shapes': shapes_data, 'constraints': constraints_data})
+    return jsonify({'status': 'success', 'shapes_data': shapes_data, 'constraints': constraints_data})
 
 
 @app.route('/reset_request_id', methods=['POST'])

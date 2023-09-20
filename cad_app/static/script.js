@@ -548,7 +548,7 @@ canvas.addEventListener('mousemove', (event) => {
     lastMousePosition = { x: canvasX, y: canvasY };
 
     // 再描画
-    draw_without_getShapesFromBackend();
+    drawShapesFromCache();
   }
 
   // 点をドラッグしているとき
@@ -568,8 +568,9 @@ canvas.addEventListener('mousemove', (event) => {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            draw();
-            console.log('responce',requestId);
+            console.log('point moved:',requestId);
+            shapesCache = data.shapes_data;
+            drawShapesFromCache();
         } else if (data.status === 'ignored') {
             console.log('このリクエストは無視されました');
         }
@@ -584,7 +585,7 @@ canvas.addEventListener('mousemove', (event) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // 既存図形やグリッド線の描画
-    draw_without_getShapesFromBackend()
+    drawShapesFromCache();
 
     // 始点から現在のマウス位置までの線を描画
     const p1CanvasCoordinates = camera.toCanvas(p1Point.x, p1Point.y);
@@ -619,7 +620,7 @@ canvas.addEventListener('wheel', (event) => {
     camera.zoomIn(1.1, mouseX, mouseY);
   }
 
-  draw_without_getShapesFromBackend();  // 再描画
+  drawShapesFromCache();  // 再描画
 
 }, { passive: false }); // passiveオプションをfalseに設定して、preventDefaultが効くようにします。
 
