@@ -286,7 +286,8 @@ function addShape(shape_type, cadCoordinates) {
     .then(response => response.json())
     .then(data => {            
         if (data.status === 'success') {
-            shapesCache = data.shapes_data
+            shapesCache = data.shapes_data;
+            drawShapesFromCache();
             console.log("shape added:", data);
         }
     });
@@ -380,9 +381,6 @@ canvas.addEventListener('click', (event) => {
         // 点を描画する処理
         addShape('Point', cadCoordinates);
         
-        // 描画
-        drawShapesFromCache();
-        
     } else if (currentMode === 'line_mode') {
         // 線を描画する処理
         if (p1Point === null) {
@@ -406,8 +404,6 @@ canvas.addEventListener('click', (event) => {
             // 線の描画を終了
             isDrawingLine = false;
             
-            // 描画
-            drawShapesFromCache();
         }
     } else if (currentMode === 'select_mode') {
         // 画面上での許容値（5pt）をCAD座標系に変換
@@ -423,8 +419,9 @@ canvas.addEventListener('click', (event) => {
         .then(data => {
             if (data.status === 'success') {
                 // 点を水色でハイライト（描画関数内で処理）
-                console.log("select shape:", data);
-                draw();
+                console.log("shape selected:", data);
+                shapesCache = data.shapes_data
+                drawShapesFromCache();
             }
         });
     }
