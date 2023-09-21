@@ -317,7 +317,7 @@ let shapesCache = [];
 const mouseCoordinatesCanvasDiv = document.getElementById('mouse-coordinates-canvas');
 const mouseCoordinatesCadDiv = document.getElementById('mouse-coordinates-cad');
 
-drawShapesFromCache();
+getShapesFromBackend();
 //console.log("script.js was started.#2");
 
 // **************************************************************

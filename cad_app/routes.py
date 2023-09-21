@@ -143,32 +143,36 @@ def calculate_line_distance(line, click_x, click_y):
 
 # ---------------------------------------------------------------
 # 最後に処理されたリクエストのID
-last_processed_request_id = 0
-request_id = 0
+last_processed_request_id = None
+# request_id = 0
 
 @app.route('/move_point', methods=['POST'])
 def move_point():
     # 処理開始時間を記録
-    start_time = time.time()
+    # start_time = time.time()
 
     global last_processed_request_id
-    global request_id
+    # global request_id
     
     # これから処理するrequest_id
-    request_id = request_id + 1
+    # request_id = request_id + 1
 
     # フロントエンドから送られてくるデータを取得
     data = request.json
     new_point = data.get('new_point')
     target_point_id = data.get('target_point_id')
-    # request_id = data.get('request_id')  # 一意のリクエストID
+    request_id = data.get('request_id')  # 一意のリクエストID
+
+    # 古いリクエストを無視
+    if last_processed_request_id is not None and request_id <= last_processed_request_id:
+        return jsonify({"status": "ignored"})
 
     #print('* last req:',last_processed_request_id)
     #print('* new req:',request_id)
     # 古いリクエストを無視
-    if request_id - 1 > last_processed_request_id:
-        print('Ignored. request_id :',request_id)
-        return jsonify({"status": "ignored"})
+#     if request_id - 1 > last_processed_request_id:
+#         print('Ignored. request_id :',request_id)
+#         return jsonify({"status": "ignored"})
 
     # ShapeManagerから現在の全ての点を取得
     points = shape_manager.get_points()
@@ -188,13 +192,13 @@ def move_point():
     last_processed_request_id = request_id
 
     # 処理終了時間を記録
-    end_time = time.time()
+    #end_time = time.time()
 
     # 処理時間を計算
-    elapsed_time = end_time - start_time
+    #elapsed_time = end_time - start_time
 
     # 処理時間とリクエストIDをログに出力
-    print(f"* done req: {request_id}, Elapsed Time: {elapsed_time} seconds")
+    #print(f"* done req: {request_id}, Elapsed Time: {elapsed_time} seconds")
 
     # 拘束条件を適用した後の図形データをフロントエンドに送り返す
     return jsonify({'status': 'success', 'shapes_data': shapes_data, 'constraints': constraints_data})
